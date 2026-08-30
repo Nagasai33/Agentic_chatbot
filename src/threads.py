@@ -1,13 +1,30 @@
 import uuid
 
-from graph import chatbot_graph
+from graph import chatbot_graph, checkpointer
 
 
 # ---------------- CREATE THREAD ----------------
 
 def create_thread():
-
     return str(uuid.uuid4())
+
+
+# ---------------- GET ALL THREADS ----------------
+
+def get_all_threads():
+
+    threads = set()
+
+    for checkpoint in checkpointer.list(None):
+
+        thread_id = checkpoint.config["configurable"].get(
+            "thread_id"
+        )
+
+        if thread_id:
+            threads.add(thread_id)
+
+    return list(threads)
 
 
 # ---------------- CHAT WITH THREAD ----------------

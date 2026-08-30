@@ -1,19 +1,7 @@
-# Virtual environment
-venv/
-
-# Environment variables / API keys
 .env
-
-# Python cache
+chatbot.db
+chatbot.db-shm
+chatbot.db-wal
 __pycache__/
-*.py[cod]
-
-# Streamlit
-.streamlit/
-
-# IDE
-.vscode/
-
-# OS files
-.DS_Store
-Thumbs.db
+*.pyc
+venv/

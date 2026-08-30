@@ -1,13 +1,20 @@
+import sqlite3
+
 from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 
 from state import ChatState
 from nodes import chat_node
 
 
-# ---------------- CHECKPOINTER ----------------
+# ---------------- SQLITE CHECKPOINTER ----------------
 
-checkpointer = MemorySaver()
+conn = sqlite3.connect(
+    "chatbot.db",
+    check_same_thread=False
+)
+
+checkpointer = SqliteSaver(conn)
 
 
 # ---------------- GRAPH ----------------

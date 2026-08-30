@@ -3,6 +3,7 @@ import streamlit as st
 from threads import (
     chatbot,
     create_thread,
+    get_all_threads,
     get_thread_messages
 )
 
@@ -18,24 +19,58 @@ st.set_page_config(
 
 # ---------------- SESSION STATE ----------------
 
-# Store all chat threads
 if "chat_threads" not in st.session_state:
+
+    saved_threads = get_all_threads()
+
     st.session_state.chat_threads = []
 
+    for thread_id in saved_threads:
 
-# Create first thread
+        messages = get_thread_messages(thread_id)
+
+        title = "New Chat"
+
+        for message in messages:
+
+            if message.type == "human":
+
+                title = message.content[:30]
+
+                if len(message.content) > 30:
+                    title += "..."
+
+                break
+
+        st.session_state.chat_threads.append(
+            {
+                "id": thread_id,
+                "title": title
+            }
+        )
+
+
+# Create first thread if no saved threads exist
 if "current_thread_id" not in st.session_state:
 
-    thread_id = create_thread()
+    if st.session_state.chat_threads:
 
-    st.session_state.current_thread_id = thread_id
+        st.session_state.current_thread_id = (
+            st.session_state.chat_threads[0]["id"]
+        )
 
-    st.session_state.chat_threads.append(
-        {
-            "id": thread_id,
-            "title": "New Chat"
-        }
-    )
+    else:
+
+        thread_id = create_thread()
+
+        st.session_state.current_thread_id = thread_id
+
+        st.session_state.chat_threads.append(
+            {
+                "id": thread_id,
+                "title": "New Chat"
+            }
+        )
 
 
 # ---------------- HELPER FUNCTIONS ----------------
@@ -70,7 +105,6 @@ def get_current_messages():
 
 with st.sidebar:
 
-    # New Chat
     if st.button(
         "＋ New chat",
         use_container_width=True
@@ -80,13 +114,9 @@ with st.sidebar:
 
         st.rerun()
 
-
     st.divider()
 
-
-    # Recent chats
     st.caption("Recent")
-
 
     for chat in reversed(
         st.session_state.chat_threads
@@ -94,7 +124,6 @@ with st.sidebar:
 
         thread_id = chat["id"]
         title = chat["title"]
-
 
         if st.button(
             f"💬 {title}",
@@ -106,15 +135,12 @@ with st.sidebar:
 
             st.rerun()
 
-
-    # Push settings to bottom
     st.markdown(
         """
         <div style="height: 55vh;"></div>
         """,
         unsafe_allow_html=True
     )
-
 
     st.divider()
 
@@ -127,13 +153,11 @@ with st.sidebar:
 st.title("🤖 Agentic Chatbot")
 
 
-# Current thread
 current_thread_id = (
     st.session_state.current_thread_id
 )
 
 
-# Get messages for current thread
 messages = get_current_messages()
 
 
@@ -142,17 +166,13 @@ messages = get_current_messages()
 for message in messages:
 
     if message.type == "human":
-
         role = "user"
 
     elif message.type == "ai":
-
         role = "assistant"
 
     else:
-
         continue
-
 
     with st.chat_message(role):
 
@@ -170,30 +190,22 @@ user_input = st.chat_input(
 
 if user_input:
 
-    # Find current chat
     current_chat = next(
         chat
         for chat in st.session_state.chat_threads
         if chat["id"] == current_thread_id
     )
 
-
-    # Create title from first message
     if current_chat["title"] == "New Chat":
 
         current_chat["title"] = user_input[:30]
 
         if len(user_input) > 30:
-
             current_chat["title"] += "..."
 
-
-    # Send message to LangGraph
     response = chatbot(
         user_input,
         current_thread_id
     )
 
-
-    # Refresh UI
     st.rerun()
