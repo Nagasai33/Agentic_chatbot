@@ -1,6 +1,6 @@
 import uuid
 
-from graph import chatbot_graph, checkpointer
+from src.graph import chatbot_graph, checkpointer
 
 
 # ---------------- CREATE THREAD ----------------
@@ -27,7 +27,7 @@ def get_all_threads():
     return list(threads)
 
 
-# ---------------- CHAT WITH THREAD ----------------
+# ---------------- NORMAL CHAT ----------------
 
 def chatbot(message, thread_id):
 
@@ -50,6 +50,32 @@ def chatbot(message, thread_id):
     )
 
     return response["messages"][-1].content
+
+
+# ---------------- STREAMING CHAT ----------------
+
+def stream_chatbot(message, thread_id):
+
+    config = {
+        "configurable": {
+            "thread_id": thread_id
+        }
+    }
+
+    for message_chunk, metadata in chatbot_graph.stream(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ]
+        },
+        config=config,
+        stream_mode="messages"
+    ):
+
+        yield message_chunk
 
 
 # ---------------- GET THREAD MESSAGES ----------------

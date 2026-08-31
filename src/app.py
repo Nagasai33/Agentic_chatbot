@@ -1,7 +1,7 @@
 import streamlit as st
 
 from threads import (
-    chatbot,
+    stream_chatbot,
     create_thread,
     get_all_threads,
     get_thread_messages
@@ -161,7 +161,7 @@ current_thread_id = (
 messages = get_current_messages()
 
 
-# ---------------- DISPLAY MESSAGES ----------------
+# ---------------- DISPLAY OLD MESSAGES ----------------
 
 for message in messages:
 
@@ -203,9 +203,26 @@ if user_input:
         if len(user_input) > 30:
             current_chat["title"] += "..."
 
-    response = chatbot(
-        user_input,
-        current_thread_id
-    )
+    # Display user's message immediately
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-    st.rerun()
+    # Stream AI response
+    with st.chat_message("assistant"):
+
+        response_placeholder = st.empty()
+
+        full_response = ""
+
+        for chunk in stream_chatbot(
+            user_input,
+            current_thread_id
+        ):
+
+            if chunk.content:
+
+                full_response += chunk.content
+
+                response_placeholder.markdown(
+                    full_response
+                )
