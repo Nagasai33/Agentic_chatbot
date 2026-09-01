@@ -3,8 +3,11 @@ import streamlit as st
 from threads import (
     stream_chatbot,
     create_thread,
-    get_all_threads,
-    get_thread_messages
+    get_all_chats,
+    get_thread_messages,
+    update_chat,
+    archive_chat
+    
 )
 
 
@@ -19,38 +22,17 @@ st.set_page_config(
 
 # ---------------- SESSION STATE ----------------
 
+# Track which chat is currently being edited.
+# Initially, no chat is being edited.
+if "editing_thread_id" not in st.session_state:
+    st.session_state.editing_thread_id = None
+
 if "chat_threads" not in st.session_state:
 
-    saved_threads = get_all_threads()
-
-    st.session_state.chat_threads = []
-
-    for thread_id in saved_threads:
-
-        messages = get_thread_messages(thread_id)
-
-        title = "New Chat"
-
-        for message in messages:
-
-            if message.type == "human":
-
-                title = message.content[:30]
-
-                if len(message.content) > 30:
-                    title += "..."
-
-                break
-
-        st.session_state.chat_threads.append(
-            {
-                "id": thread_id,
-                "title": title
-            }
-        )
+    st.session_state.chat_threads = get_all_chats()
 
 
-# Create first thread if no saved threads exist
+# Create first thread if no chats exist
 if "current_thread_id" not in st.session_state:
 
     if st.session_state.chat_threads:
@@ -63,14 +45,9 @@ if "current_thread_id" not in st.session_state:
 
         thread_id = create_thread()
 
-        st.session_state.current_thread_id = thread_id
+        st.session_state.chat_threads = get_all_chats()
 
-        st.session_state.chat_threads.append(
-            {
-                "id": thread_id,
-                "title": "New Chat"
-            }
-        )
+        st.session_state.current_thread_id = thread_id
 
 
 # ---------------- HELPER FUNCTIONS ----------------
@@ -79,12 +56,7 @@ def create_new_chat():
 
     thread_id = create_thread()
 
-    st.session_state.chat_threads.append(
-        {
-            "id": thread_id,
-            "title": "New Chat"
-        }
-    )
+    st.session_state.chat_threads = get_all_chats()
 
     st.session_state.current_thread_id = thread_id
 
@@ -118,22 +90,123 @@ with st.sidebar:
 
     st.caption("Recent")
 
-    for chat in reversed(
-        st.session_state.chat_threads
-    ):
+    # Always get latest chat metadata from database
+    st.session_state.chat_threads = get_all_chats()
+
+    for chat in st.session_state.chat_threads:
 
         thread_id = chat["id"]
         title = chat["title"]
 
-        if st.button(
-            f"💬 {title}",
-            key=f"chat_{thread_id}",
-            use_container_width=True
-        ):
+        # ---------------- EDIT MODE ----------------
 
-            switch_chat(thread_id)
+        if st.session_state.editing_thread_id == thread_id:
 
-            st.rerun()
+            new_title = st.text_input(
+                "Chat title",
+                value=title,
+                key=f"edit_input_{thread_id}"
+            )
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                if st.button(
+                    "💾 Save",
+                    key=f"save_{thread_id}",
+                    use_container_width=True
+                ):
+
+                    if new_title.strip():
+
+                        update_chat(
+                            thread_id,
+                            title=new_title.strip()
+                        )
+
+                    st.session_state.editing_thread_id = None
+                    st.session_state.chat_threads = get_all_chats()
+
+                    st.rerun()
+
+            with col2:
+
+                if st.button(
+                    "❌ Cancel",
+                    key=f"cancel_{thread_id}",
+                    use_container_width=True
+                ):
+
+                    st.session_state.editing_thread_id = None
+
+                    st.rerun()
+
+        # ---------------- NORMAL MODE ----------------
+
+        else:
+
+            col1, col2, col3 = st.columns([6, 1, 1])
+
+            with col1:
+
+                if st.button(
+                    f"💬 {title}",
+                    key=f"chat_{thread_id}",
+                    use_container_width=True
+                ):
+
+                    switch_chat(thread_id)
+
+                    st.rerun()
+
+            # Edit button
+            with col2:
+
+                if st.button(
+                    "✏️",
+                    key=f"edit_{thread_id}",
+                    use_container_width=True
+                ):
+
+                    st.session_state.editing_thread_id = thread_id
+
+                    st.rerun()
+
+            # Archive button
+            with col3:
+
+                if st.button(
+                    "🗑️",
+                    key=f"archive_{thread_id}",
+                    use_container_width=True
+                ):
+
+                    archive_chat(thread_id)
+
+                    st.session_state.chat_threads = get_all_chats()
+
+                    # If current chat was archived,
+                    # switch to another available chat.
+                    if thread_id == st.session_state.current_thread_id:
+
+                        if st.session_state.chat_threads:
+
+                            st.session_state.current_thread_id = (
+                                st.session_state.chat_threads[0]["id"]
+                            )
+
+                        else:
+
+                            new_thread_id = create_thread()
+
+                            st.session_state.chat_threads = get_all_chats()
+
+                            st.session_state.current_thread_id = (
+                                new_thread_id
+                            )
+
+                    st.rerun()
 
     st.markdown(
         """
@@ -166,12 +239,15 @@ messages = get_current_messages()
 for message in messages:
 
     if message.type == "human":
+
         role = "user"
 
     elif message.type == "ai":
+
         role = "assistant"
 
     else:
+
         continue
 
     with st.chat_message(role):
@@ -196,15 +272,23 @@ if user_input:
         if chat["id"] == current_thread_id
     )
 
+    # Set title from first user message
     if current_chat["title"] == "New Chat":
 
-        current_chat["title"] = user_input[:30]
+        new_title = user_input[:30]
 
         if len(user_input) > 30:
-            current_chat["title"] += "..."
+
+            new_title += "..."
+
+        update_chat(
+            current_thread_id,
+            title=new_title
+        )
 
     # Display user's message immediately
     with st.chat_message("user"):
+
         st.markdown(user_input)
 
     # Stream AI response
@@ -226,3 +310,8 @@ if user_input:
                 response_placeholder.markdown(
                     full_response
                 )
+
+    # Refresh chat metadata after response
+    st.session_state.chat_threads = get_all_chats()
+
+    st.rerun()

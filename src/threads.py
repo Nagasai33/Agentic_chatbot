@@ -1,31 +1,183 @@
 import uuid
+import sqlite3
+from datetime import datetime
 
-from src.graph import chatbot_graph, checkpointer
+from graph import chatbot_graph, checkpointer
+
+
+DB_PATH = "chatbot.db"
+
+
+# ---------------- APPLICATION DATABASE ----------------
+
+def init_database():
+
+    conn = sqlite3.connect(DB_PATH)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS chats (
+            thread_id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            archived INTEGER NOT NULL DEFAULT 0
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+# Initialize application database
+init_database()
 
 
 # ---------------- CREATE THREAD ----------------
 
 def create_thread():
-    return str(uuid.uuid4())
+
+    thread_id = str(uuid.uuid4())
+
+    now = datetime.now().isoformat()
+
+    conn = sqlite3.connect(DB_PATH)
+
+    conn.execute(
+        """
+        INSERT INTO chats (
+            thread_id,
+            title,
+            created_at,
+            updated_at
+        )
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            thread_id,
+            "New Chat",
+            now,
+            now
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    return thread_id
 
 
 # ---------------- GET ALL THREADS ----------------
 
 def get_all_threads():
 
-    threads = set()
+    conn = sqlite3.connect(DB_PATH)
 
-    for checkpoint in checkpointer.list(None):
+    cursor = conn.execute(
+        """
+        SELECT thread_id
+        FROM chats
+        WHERE archived = 0
+        ORDER BY updated_at DESC
+        """
+    )
 
-        thread_id = checkpoint.config["configurable"].get(
-            "thread_id"
+    threads = [
+        row[0]
+        for row in cursor.fetchall()
+    ]
+
+    conn.close()
+
+    return threads
+
+#----------------get_all_threads----------------
+
+def get_all_chats():
+
+    conn = sqlite3.connect(DB_PATH)
+
+    cursor = conn.execute(
+        """
+        SELECT
+            thread_id,
+            title,
+            created_at,
+            updated_at,
+            archived
+        FROM chats
+        WHERE archived = 0
+        ORDER BY updated_at DESC
+        """
+    )
+
+    chats = []
+
+    for row in cursor.fetchall():
+
+        chats.append(
+            {
+                "id": row[0],
+                "title": row[1],
+                "created_at": row[2],
+                "updated_at": row[3],
+                "archived": row[4]
+            }
         )
 
-        if thread_id:
-            threads.add(thread_id)
+    conn.close()
 
-    return list(threads)
+    return chats
 
+
+# ---------------- UPDATE CHAT ----------------
+
+def update_chat(
+    thread_id,
+    title=None
+):
+
+    conn = sqlite3.connect(DB_PATH)
+
+    if title is not None:
+
+        conn.execute(
+            """
+            UPDATE chats
+            SET title = ?,
+                updated_at = ?
+            WHERE thread_id = ?
+            """,
+            (
+                title,
+                datetime.now().isoformat(),
+                thread_id
+            )
+        )
+
+    conn.commit()
+    conn.close()
+
+# ---------------- UPDATE CHAT ----------------
+
+def archive_chat(thread_id):
+
+    conn = sqlite3.connect(DB_PATH)
+
+    conn.execute(
+        """
+        UPDATE chats
+        SET archived = 1,
+            updated_at = ?
+        WHERE thread_id = ?
+        """,
+        (
+            datetime.now().isoformat(),
+            thread_id
+        )
+    )
+
+    conn.commit()
+    conn.close()
 
 # ---------------- NORMAL CHAT ----------------
 
@@ -77,6 +229,9 @@ def stream_chatbot(message, thread_id):
 
         yield message_chunk
 
+    # Update the chat's last activity time
+    update_chat(thread_id)
+
 
 # ---------------- GET THREAD MESSAGES ----------------
 
@@ -98,3 +253,39 @@ def get_thread_messages(thread_id):
         )
 
     return []
+
+
+# ---------------- GET CHAT METADATA ----------------
+
+def get_chat(thread_id):
+
+    conn = sqlite3.connect(DB_PATH)
+
+    cursor = conn.execute(
+        """
+        SELECT
+            thread_id,
+            title,
+            created_at,
+            updated_at,
+            archived
+        FROM chats
+        WHERE thread_id = ?
+        """,
+        (thread_id,)
+    )
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    if row is None:
+        return None
+
+    return {
+        "thread_id": row[0],
+        "title": row[1],
+        "created_at": row[2],
+        "updated_at": row[3],
+        "archived": row[4]
+    }
