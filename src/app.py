@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime, timedelta
 
 from threads import (
     stream_chatbot,
@@ -72,10 +73,27 @@ def get_current_messages():
         st.session_state.current_thread_id
     )
 
+def get_date_group(date_string):
+
+    chat_date = datetime.fromisoformat(date_string).date()
+
+    today = datetime.now().date()
+
+    if chat_date == today:
+        return "Today"
+
+    elif chat_date == today.fromordinal(today.toordinal() - 1):
+        return "Yesterday"
+
+    else:
+        return chat_date.strftime("%d %b %Y")
+
 
 # ---------------- SIDEBAR ----------------
 
 with st.sidebar:
+
+    # ---------------- NEW CHAT ----------------
 
     if st.button(
         "＋ New chat",
@@ -86,17 +104,39 @@ with st.sidebar:
 
         st.rerun()
 
+
     st.divider()
+
+
+    # ---------------- CONVERSATIONS ----------------
 
     st.caption("Recent")
 
     # Always get latest chat metadata from database
     st.session_state.chat_threads = get_all_chats()
 
+
+    current_group = None
+
+
     for chat in st.session_state.chat_threads:
 
         thread_id = chat["id"]
         title = chat["title"]
+        updated_at = chat["updated_at"]
+
+
+        # ---------------- DATE GROUP ----------------
+
+        date_group = get_date_group(updated_at)
+
+
+        if date_group != current_group:
+
+            st.caption(date_group)
+
+            current_group = date_group
+
 
         # ---------------- EDIT MODE ----------------
 
@@ -108,14 +148,17 @@ with st.sidebar:
                 key=f"edit_input_{thread_id}"
             )
 
+
             col1, col2 = st.columns(2)
+
 
             with col1:
 
                 if st.button(
                     "💾 Save",
                     key=f"save_{thread_id}",
-                    use_container_width=True
+                    use_container_width=True,
+                    help="Save chat title"
                 ):
 
                     if new_title.strip():
@@ -125,33 +168,55 @@ with st.sidebar:
                             title=new_title.strip()
                         )
 
+
                     st.session_state.editing_thread_id = None
+
                     st.session_state.chat_threads = get_all_chats()
 
                     st.rerun()
 
+
             with col2:
 
                 if st.button(
-                    "❌ Cancel",
+                    "Cancel",
                     key=f"cancel_{thread_id}",
-                    use_container_width=True
+                    use_container_width=True,
+                    help="Cancel renaming"
                 ):
 
                     st.session_state.editing_thread_id = None
 
                     st.rerun()
 
+
         # ---------------- NORMAL MODE ----------------
 
         else:
 
-            col1, col2, col3 = st.columns([6, 1, 1])
+            col1, col2, col3 = st.columns(
+                [6, 1, 1]
+            )
+
+
+            # ---------------- CHAT BUTTON ----------------
 
             with col1:
 
+                if (
+                    thread_id
+                    == st.session_state.current_thread_id
+                ):
+
+                    chat_label = f"● {title}"
+
+                else:
+
+                    chat_label = f"💬 {title}"
+
+
                 if st.button(
-                    f"💬 {title}",
+                    chat_label,
                     key=f"chat_{thread_id}",
                     use_container_width=True
                 ):
@@ -160,35 +225,50 @@ with st.sidebar:
 
                     st.rerun()
 
-            # Edit button
+
+            # ---------------- RENAME BUTTON ----------------
+
             with col2:
 
                 if st.button(
                     "✏️",
                     key=f"edit_{thread_id}",
-                    use_container_width=True
+                    use_container_width=True,
+                    help="Rename chat"
                 ):
 
-                    st.session_state.editing_thread_id = thread_id
+                    st.session_state.editing_thread_id = (
+                        thread_id
+                    )
 
                     st.rerun()
 
-            # Archive button
+
+            # ---------------- ARCHIVE BUTTON ----------------
+
             with col3:
 
                 if st.button(
                     "🗑️",
                     key=f"archive_{thread_id}",
-                    use_container_width=True
+                    use_container_width=True,
+                    help="Archive chat"
                 ):
 
                     archive_chat(thread_id)
 
-                    st.session_state.chat_threads = get_all_chats()
+                    st.session_state.chat_threads = (
+                        get_all_chats()
+                    )
+
 
                     # If current chat was archived,
                     # switch to another available chat.
-                    if thread_id == st.session_state.current_thread_id:
+
+                    if (
+                        thread_id
+                        == st.session_state.current_thread_id
+                    ):
 
                         if st.session_state.chat_threads:
 
@@ -200,60 +280,97 @@ with st.sidebar:
 
                             new_thread_id = create_thread()
 
-                            st.session_state.chat_threads = get_all_chats()
+                            st.session_state.chat_threads = (
+                                get_all_chats()
+                            )
 
                             st.session_state.current_thread_id = (
                                 new_thread_id
                             )
 
+
                     st.rerun()
 
-    st.markdown(
-        """
-        <div style="height: 55vh;"></div>
-        """,
-        unsafe_allow_html=True
-    )
+
+    # ------------------------------------------------
+    # IMPORTANT:
+    # The following section is OUTSIDE the for-loop.
+    # ------------------------------------------------
 
     st.divider()
 
     st.write("⚙️ Settings")
+
     st.write("👤 Profile")
 
 
 # ---------------- MAIN CHAT ----------------
 
-st.title("🤖 Agentic Chatbot")
-
-
-current_thread_id = (
-    st.session_state.current_thread_id
-)
-
+current_thread_id = st.session_state.current_thread_id
 
 messages = get_current_messages()
 
 
+# ---------------- EMPTY STATE ----------------
+
+if not messages:
+
+    # Add some vertical space
+    st.write("")
+    st.write("")
+    st.write("")
+    st.write("")
+
+    # Create three columns so the content
+    # appears in the center of the main chat area.
+    left_space, center_content, right_space = st.columns(
+        [1, 2, 1]
+    )
+
+    with center_content:
+
+        st.markdown(
+            "<div style='text-align: center;'>"
+            "<div style='font-size: 3rem;'>🤖</div>"
+            "<h1>Agentic Chatbot</h1>"
+            "<h3>How can I help you today?</h3>"
+            "<p>Ask me anything and I'll help you "
+            "solve, learn, or explore.</p>"
+            "</div>",
+            unsafe_allow_html=True
+        )
+
+
 # ---------------- DISPLAY OLD MESSAGES ----------------
 
-for message in messages:
+else:
 
-    if message.type == "human":
+    for message in messages:
 
-        role = "user"
+        if message.type == "human":
 
-    elif message.type == "ai":
+            role = "user"
+            avatar = ":material/person:"
 
-        role = "assistant"
+        elif message.type == "ai":
 
-    else:
+            role = "assistant"
+            avatar = ":material/smart_toy:"
 
-        continue
+        else:
 
-    with st.chat_message(role):
+            continue
 
-        st.markdown(message.content)
 
+        with st.chat_message(
+            role,
+            avatar=avatar
+        ):
+
+            st.markdown(
+                message.content
+            )
+            
 
 # ---------------- CHAT INPUT ----------------
 
@@ -292,26 +409,26 @@ if user_input:
         st.markdown(user_input)
 
     # Stream AI response
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=":material/smart_toy:"):
 
-        response_placeholder = st.empty()
+        thinking_placeholder = st.empty()
+        thinking_placeholder.markdown("Thinking...")
+
+        message_placeholder = st.empty()
 
         full_response = ""
+        first_chunk = True
 
-        for chunk in stream_chatbot(
-            user_input,
-            current_thread_id
-        ):
+        for chunk in stream_chatbot(user_input, current_thread_id):
 
-            if chunk.content:
+            if first_chunk:
+                thinking_placeholder.empty()
+                first_chunk = False
 
-                full_response += chunk.content
+            full_response += chunk.content
+            message_placeholder.markdown(full_response + "▌")
 
-                response_placeholder.markdown(
-                    full_response
-                )
+        message_placeholder.markdown(full_response)
 
     # Refresh chat metadata after response
     st.session_state.chat_threads = get_all_chats()
-
-    st.rerun()
