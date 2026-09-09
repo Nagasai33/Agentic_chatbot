@@ -378,6 +378,8 @@ user_input = st.chat_input(
     "Ask me anything..."
 )
 
+if user_input:
+    user_input = user_input.strip()
 
 # ---------------- HANDLE MESSAGE ----------------
 
@@ -419,16 +421,32 @@ if user_input:
         full_response = ""
         first_chunk = True
 
-        for chunk in stream_chatbot(user_input, current_thread_id):
+        try:
 
-            if first_chunk:
-                thinking_placeholder.empty()
-                first_chunk = False
+            for event in stream_chatbot(user_input, current_thread_id):
 
-            full_response += chunk.content
-            message_placeholder.markdown(full_response + "▌")
+                if event["type"] == "tool":
+                    thinking_placeholder.markdown("🔧 Using calculator...")
 
-        message_placeholder.markdown(full_response)
+                elif event["type"] == "message":
+                    if first_chunk:
+                        thinking_placeholder.empty()
+                        first_chunk = False
+
+                    full_response += event["content"]
+                    message_placeholder.markdown(full_response + "▌")
+
+            message_placeholder.markdown(full_response)
+
+        except Exception as e:
+
+            thinking_placeholder.empty()
+            message_placeholder.error(
+                "Sorry, I couldn't generate a response right now. "
+                "Please try again."
+            )
+
+            print(f"Chatbot error: {e}")
 
     # Refresh chat metadata after response
     st.session_state.chat_threads = get_all_chats()

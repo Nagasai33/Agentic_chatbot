@@ -207,31 +207,30 @@ def chatbot(message, thread_id):
 # ---------------- STREAMING CHAT ----------------
 
 def stream_chatbot(message, thread_id):
+    config = {"configurable": {"thread_id": thread_id}}
 
-    config = {
-        "configurable": {
-            "thread_id": thread_id
-        }
-    }
-
-    for message_chunk, metadata in chatbot_graph.stream(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ]
-        },
+    for mode, data in chatbot_graph.stream(
+        {"messages": [{"role": "user", "content": message}]},
         config=config,
-        stream_mode="messages"
+        stream_mode=["messages", "updates"]
     ):
+        if mode == "messages":
+            message_chunk, metadata = data
 
-        yield message_chunk
+            if message_chunk.content:
+                yield {
+                    "type": "message",
+                    "content": message_chunk.content
+                }
 
-    # Update the chat's last activity time
+        elif mode == "updates":
+            if "tools" in data:
+                yield {
+                    "type": "tool",
+                    "name": "calculator"
+                }
+
     update_chat(thread_id)
-
 
 # ---------------- GET THREAD MESSAGES ----------------
 
@@ -255,6 +254,26 @@ def get_thread_messages(thread_id):
     return []
 
 
+# TEMPORARY TEST FUNCTION
+def test_graph_updates(message, thread_id):
+    config = {"configurable": {"thread_id": thread_id}}
+
+    for update in chatbot_graph.stream(
+        {"messages": [{"role": "user", "content": message}]},
+        config=config,
+        stream_mode="updates"
+    ):
+        print("UPDATE:", update)
+
+def test_multi_stream(message, thread_id):
+    config = {"configurable": {"thread_id": thread_id}}
+
+    for event in chatbot_graph.stream(
+        {"messages": [{"role": "user", "content": message}]},
+        config=config,
+        stream_mode=["messages", "updates"]
+    ):
+        print("EVENT:", event)
 # ---------------- GET CHAT METADATA ----------------
 
 def get_chat(thread_id):
@@ -289,3 +308,5 @@ def get_chat(thread_id):
         "updated_at": row[3],
         "archived": row[4]
     }
+
+   
