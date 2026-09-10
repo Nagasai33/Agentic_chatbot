@@ -844,3 +844,107 @@ Graph update streaming
 Real token streaming
 Tool activity display
 Calculator activity indicator
+
+## Production Hardening
+
+The chatbot has been incrementally improved with production-oriented
+reliability and cost-control mechanisms.
+
+### Input Protection
+
+- Maximum user message length: 10,000 characters.
+- Oversized messages are rejected before reaching the LLM.
+- Helps reduce accidental or abusive large requests.
+
+### Token Usage Tracking
+
+The application captures LLM token usage for each model call:
+
+- Input tokens
+- Output tokens
+- Total tokens
+- Number of LLM calls
+
+Token usage is stored in SQLite using the `token_usage` table.
+
+This is important for agentic workflows because one user request can
+result in multiple LLM calls, especially when tools are involved.
+
+Example:
+
+```text
+User Request
+     ↓
+LLM Call #1
+     ↓
+Calculator Tool
+     ↓
+LLM Call #2
+     ↓
+Final Response
+
+Current Production Roadmap
+
+Input Protection        ✅
+Token Tracking          ✅
+Usage Persistence       ✅
+Usage Aggregation       ✅
+Cost Estimation         ✅
+Token Budget            ✅
+Rate Limiting           ⏸️
+Timeouts & Retries      ⏳
+Tool Safety             ⏳
+Error Handling          ⏳
+Logging & Monitoring    ⏳
+Authentication          ⏳
+User Isolation          ⏳
+
+Technology Stack
+Python
+Streamlit
+LangGraph
+LangChain
+Groq API
+SQLite
+LangGraph SQLite Checkpointing
+Architecture
+Streamlit UI
+     ↓
+Thread / Chat Management
+     ↓
+LangGraph
+     ↓
+Agent / Tool Loop
+     ↓
+LLM
+     ↓
+Groq API
+
+Persistent application data
+     ↓
+SQLite
+
+LLM checkpoint state
+     ↓
+SQLite Checkpointer
+Production Engineering Focus
+
+The project is being developed incrementally with emphasis on:
+
+Cost control
+Token usage visibility
+Request protection
+Persistent state
+Tool execution
+Error handling
+Reliability
+Security
+Observability
+Scalability
+
+### One correction before you commit
+
+Set this back to:
+
+```python
+MAX_REQUESTS = 5

@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
+MAX_MESSAGE_LENGTH = 10_000
 
 from threads import (
     stream_chatbot,
@@ -21,7 +22,8 @@ st.set_page_config(
 )
 
 
-# ---------------- SESSION STATE ----------------
+# ---------------- SESSI
+# ON STATE ----------------
 
 # Track which chat is currently being edited.
 # Initially, no chat is being edited.
@@ -378,6 +380,13 @@ user_input = st.chat_input(
     "Ask me anything..."
 )
 
+if user_input and len(user_input) > MAX_MESSAGE_LENGTH:
+    st.error(
+        f"Your message is too long. "
+        f"Please keep it under {MAX_MESSAGE_LENGTH:,} characters."
+    )
+    st.stop()
+
 if user_input:
     user_input = user_input.strip()
 
@@ -435,6 +444,10 @@ if user_input:
 
                     full_response += event["content"]
                     message_placeholder.markdown(full_response + "▌")
+                elif event["type"] == "error":
+                    thinking_placeholder.empty()
+                    message_placeholder.error(event["content"]) 
+                    break  
 
             message_placeholder.markdown(full_response)
 
