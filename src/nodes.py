@@ -1,7 +1,7 @@
 from state import ChatState
 from llm import llm
 from tools.calculator import calculator
-
+from langchain_core.messages import SystemMessage
 
 tools = [
     calculator,
@@ -12,8 +12,39 @@ llm_with_tools = llm.bind_tools(tools)
 
 
 def chat_node(state: ChatState):
+
     messages = state["messages"]
 
-    response = llm_with_tools.invoke(messages)
+    system_message = SystemMessage(
+        content="""
+You are a helpful AI assistant.
+
+When you use the calculator tool, present the final calculation result
+in a simple and user-friendly format.
+
+For simple calculations:
+- Give the final answer clearly.
+- Avoid unnecessary LaTeX formatting.
+- Avoid unnecessary calculation steps.
+- Use normal mathematical symbols when useful.
+- Do not add unnecessary parentheses.
+- Keep simple calculation answers concise.
+
+Examples:
+
+User: Calculate 25 * 45
+Good response: 25 × 45 = 1125
+
+User: Calculate (10 + 20) * 5
+Good response: (10 + 20) × 5 = 150
+
+User: Calculate 1 + 2 + 3 + 4 + 5
+Good response: 1 + 2 + 3 + 4 + 5 = 15
+"""
+    )
+
+    messages_with_system = [system_message] + messages
+
+    response = llm_with_tools.invoke(messages_with_system)
 
     return {"messages": [response]}

@@ -356,6 +356,7 @@ def chatbot(message, thread_id):
 
 def stream_chatbot(message, thread_id):
 
+    # 1. Check token budget
     if has_exceeded_token_budget(thread_id):
         yield {
             "type": "error",
@@ -363,6 +364,7 @@ def stream_chatbot(message, thread_id):
         }
         return
 
+    # 2. Check rate limit
     if not check_rate_limit(thread_id):
         yield {
             "type": "error",
@@ -371,42 +373,78 @@ def stream_chatbot(message, thread_id):
         return
 
     config = {"configurable": {"thread_id": thread_id}}
+    response_generated = False
 
-    for mode, data in chatbot_graph.stream(
-        {"messages": [{"role": "user", "content": message}]},
-        config=config,
-        stream_mode=["messages", "updates"]
-    ):
-        if mode == "messages":
-            message_chunk, metadata = data
+    # 3. Run LangGraph safely
+    try:
 
-            usage = getattr(message_chunk, "usage_metadata", None)
+        for mode, data in chatbot_graph.stream(
+            {"messages": [{"role": "user", "content": message}]},
+            config=config,
+            stream_mode=["messages", "updates"]
+        ):
 
-            if usage:
-                print("TOKEN USAGE:", usage)
-                
-                save_token_usage(
-                    thread_id=thread_id,
-                    input_tokens=usage.get("input_tokens", 0),
-                    output_tokens=usage.get("output_tokens", 0),
-                    total_tokens=usage.get("total_tokens", 0)
+            if mode == "messages":
+
+                message_chunk, metadata = data
+
+                usage = getattr(
+                    message_chunk,
+                    "usage_metadata",
+                    None
                 )
-                
 
-            if message_chunk.content:
+                if usage:
+                    print("TOKEN USAGE:", usage)
+
+                    save_token_usage(
+                        thread_id=thread_id,
+                        input_tokens=usage.get("input_tokens", 0),
+                        output_tokens=usage.get("output_tokens", 0),
+                        total_tokens=usage.get("total_tokens", 0)
+                    )
+
+                if message_chunk.content:
+                    response_generated = True
+
+                    yield {
+                        "type": "message",
+                        "content": message_chunk.content
+                    }
+
+            elif mode == "updates":
+
+                if "tools" in data:
+
+                    tool_data = data["tools"]
+
+                    for tool_message in tool_data.get("messages", []):
+
+                        yield {
+                            "type": "tool",
+                            "name": getattr(tool_message, "name", "calculator"),
+                            "content": getattr(tool_message, "content", "")
+                        }
+        if not response_generated:
                 yield {
-                    "type": "message",
-                    "content": message_chunk.content
+                    "type": "error",
+                    "content": "The AI could not generate a response. Please try a shorter or simpler request."
                 }
 
-        elif mode == "updates":
-            if "tools" in data:
-                yield {
-                    "type": "tool",
-                    "name": "calculator"
-                }
 
-    update_chat(thread_id)
+
+        update_chat(thread_id)
+
+    except Exception as e:
+
+        # Developer gets the technical error
+        print("CHATBOT ERROR:", repr(e))
+
+        # User gets a safe error message
+        yield {
+            "type": "error",
+            "content": "Something went wrong while processing your request. Please try again."
+        }
 
 # ---------------- GET THREAD MESSAGES ----------------
 

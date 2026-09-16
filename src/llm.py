@@ -10,5 +10,7 @@ load_dotenv()
 llm = ChatOpenAI(
     model="openai/gpt-oss-20b",
     api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
+    base_url="https://api.groq.com/openai/v1",
+    timeout = 30,
+    max_retries=2
 )

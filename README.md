@@ -1,79 +1,103 @@
-# 🤖 Agentic AI Chatbot
+🤖 Agentic AI Chatbot
 
-A modular, persistent, and tool-enabled conversational AI application built with **Python, LangGraph, LangChain, Groq, SQLite, and Streamlit**.
+A modular, persistent, and tool-enabled conversational AI application built with Python, LangGraph, LangChain, Groq, SQLite, and Streamlit.
 
-This project is being developed incrementally to demonstrate how a simple LLM chatbot can evolve into a more capable **Agentic AI system** with persistent conversations, tool calling, streaming responses, file understanding, RAG, web search, and multimodal capabilities.
+This project is being developed incrementally to demonstrate how a simple LLM chatbot can evolve into a more capable Agentic AI system with persistent conversations, tool calling, streaming responses, file understanding, RAG, web search, and multimodal capabilities.
 
----
-
-## 🚀 Project Overview
+🚀 Project Overview
 
 The goal of this project is to build an AI assistant that can:
 
-- Maintain multiple conversations
-- Persist conversations across application restarts
-- Resume previous conversations
-- Stream LLM responses in real time
-- Execute external tools when required
-- Display tool activity in the UI
-- Process uploaded documents
-- Perform document-based question answering using RAG
-- Search the web
-- Work with multiple tools
-- Support image understanding
-- Evolve toward a production-oriented Agentic AI architecture
+Maintain multiple conversations
 
-The project is intentionally developed **one capability at a time**, with each feature implemented, tested, and integrated before moving to the next stage.
+Persist conversations across application restarts
 
----
+Resume previous conversations
 
-# ✨ Current Features
+Stream LLM responses in real time
 
-### 💬 Conversational AI
+Execute external tools when required
 
-- ChatGPT-style conversational interface
-- Multiple independent conversations
-- Unique `thread_id` for every conversation
-- Conversation history
-- Resume previous conversations
-- Conversation context maintained by LangGraph
+Display tool activity in the UI
 
-### ⚡ Real-Time Streaming
+Process uploaded documents
 
-- Real LLM response streaming
-- Progressive token display
-- "Thinking" state while generating
-- Improved perceived response latency
-- Streaming works with persistent conversations
+Perform document-based question answering using RAG
 
-### 🧵 Conversation Management
+Search the web
 
-- Create new conversations
-- Switch between conversations
-- Automatically generated conversation titles
-- Rename conversations
-- Archive conversations
-- Active/archived conversation management
+Work with multiple tools
 
-### 💾 Persistent Storage
+Support image understanding
 
-- SQLite-based persistence
-- LangGraph checkpoint persistence
-- Application-level chat metadata
-- Conversations survive application restarts
-- Separation between application metadata and LangGraph state
+Evolve toward a production-oriented Agentic AI architecture
 
-### 🛠️ Agentic Tool Calling
+The project is intentionally developed one capability at a time, with each feature implemented, tested, and integrated before moving to the next stage.
+
+✨ Current Features
+
+💬 Conversational AI
+
+ChatGPT-style conversational interface
+
+Multiple independent conversations
+
+Unique thread_id for every conversation
+
+Conversation history
+
+Resume previous conversations
+
+Conversation context maintained by LangGraph
+
+⚡ Real-Time Streaming
+
+Real LLM response streaming
+
+Progressive token display
+
+"Thinking" state while generating
+
+Improved perceived response latency
+
+Streaming works with persistent conversations
+
+🧵 Conversation Management
+
+Create new conversations
+
+Switch between conversations
+
+Automatically generated conversation titles
+
+Rename conversations
+
+Archive conversations
+
+Active/archived conversation management
+
+💾 Persistent Storage
+
+SQLite-based persistence
+
+LangGraph checkpoint persistence
+
+Application-level chat metadata
+
+Conversations survive application restarts
+
+Separation between application metadata and LangGraph state
+
+🛠️ Agentic Tool Calling
 
 The chatbot can allow the LLM to decide when a tool is required.
 
 Current implemented tool:
 
-- 🧮 Calculator
+🧮 Calculator
 
 The calculator supports basic arithmetic operations:
 
-```text
 +
 -
 *
@@ -779,51 +803,54 @@ Status: ✅ Completed
 
 Implemented:
 
-ChatGPT-style interface
-Improved sidebar
-Conversation controls
-Message rendering
-Streaming UX
-Thinking/loading state
-Rename functionality
-Archive functionality
-Active conversation indication
-Improved conversation organization
-Step 7 — Agentic Tools, Files, RAG & Search
+- ChatGPT-style interface
+- Improved sidebar
+- Conversation controls
+- Message rendering
+- Streaming UX
+- Thinking/loading state
+- Rename functionality
+- Archive functionality
+- Active conversation indication
+- Improved conversation organization
+- Tool activity display
+- User-friendly error messages
+
+Step 7 — Agentic Tools & Production Hardening
 
 Status: 🚧 In Progress
 
-Phase A — Tool Calling Fundamentals
+### Phase A — Tool Calling Fundamentals
 
 Status: ✅ Completed
 
-Learned and implemented:
+- Tool calling
+- `bind_tools()`
+- `ToolNode`
+- Conditional tool routing
+- `AIMessage`
+- `ToolMessage`
+- Agent vs LLM concepts
 
-Tools
-Tool calling
-bind_tools()
-ToolNode
-Conditional tool routing
-AIMessage
-ToolMessage
-Agent vs LLM concepts
-Phase B — Calculator Tool
+### Phase B — Calculator Tool
 
 Status: ✅ Completed
 
-Implemented:
+- Calculator tool
+- Safe arithmetic evaluation
+- AST-based expression parsing
+- Expression-length protection
+- Number-size protection
+- AST-complexity protection
+- Division-by-zero handling
+- Invalid-expression handling
+- Calculator testing
 
-Calculator tool
-Safe arithmetic evaluation
-AST-based expression parsing
-Tool validation
-Calculator testing
-Phase C — LangGraph Agent/Tool Loop
+### Phase C — LangGraph Agent/Tool Loop
 
 Status: ✅ Completed
 
-Implemented:
-
+```text
 chat_node
     ↓
 tools_condition
@@ -833,118 +860,155 @@ ToolNode
 calculator
     ↓
 chat_node
+    ↓
+final response
+
 Phase D — Tool Activity in UI
 
 Status: ✅ Completed
 
-Implemented:
-
 Tool execution detection
+
 Graph update streaming
+
 Real token streaming
+
 Tool activity display
+
 Calculator activity indicator
 
-## Production Hardening
+User-friendly calculator result formatting
 
-The chatbot has been incrementally improved with production-oriented
-reliability and cost-control mechanisms.
+Phase E — Production Safety & Reliability
 
-### Input Protection
+Status: ✅ Completed
 
-- Maximum user message length: 10,000 characters.
-- Oversized messages are rejected before reaching the LLM.
-- Helps reduce accidental or abusive large requests.
+Input-length protection
 
-### Token Usage Tracking
+Token usage tracking
+
+Per-thread token usage
+
+Token budget protection
+
+Request rate limiting
+
+Timeout handling
+
+LLM/API error handling
+
+Empty AI-response fallback
+
+Safe calculator execution
+
+Calculator input protection
+
+User-friendly error messages
+
+Phase F — Remaining UI & Testing
+
+Status: ⏳ Remaining
+
+Responsive/visual UI cleanup
+
+Final regression testing
+
+End-to-end testing of safety and failure scenarios
+
+File Upload / RAG
+
+Status: ⏸️ Not included in the current version
+
+File upload, document chunking, embeddings, vector databases, and document RAG are intentionally postponed while the core chatbot, tool system, reliability, and cost-control layers are being hardened.
+
+Production Hardening
+
+The chatbot has been incrementally improved with production-oriented reliability, safety, and cost-control mechanisms.
+
+Input Protection
+
+Maximum user message length: 10,000 characters.
+
+Oversized messages are rejected before reaching the LLM.
+
+Helps reduce accidental or abusive large requests.
+
+Token Usage Tracking
 
 The application captures LLM token usage for each model call:
 
-- Input tokens
-- Output tokens
-- Total tokens
-- Number of LLM calls
+Input tokens
 
-Token usage is stored in SQLite using the `token_usage` table.
+Output tokens
 
-This is important for agentic workflows because one user request can
-result in multiple LLM calls, especially when tools are involved.
+Total tokens
 
-Example:
+Number of LLM calls
 
-```text
-User Request
-     ↓
-LLM Call #1
-     ↓
-Calculator Tool
-     ↓
-LLM Call #2
-     ↓
-Final Response
+Token usage is stored in SQLite using the token_usage table.
+
+This is important for agentic workflows because one user request can result in multiple LLM calls, especially when tools are involved.
+
+Token Budget
+
+The application checks conversation token usage against a configured maximum to help control excessive API consumption.
+
+Rate Limiting
+
+Requests are rate-limited per conversation/thread.
+
+When the request limit is exceeded, the application returns:
+
+Too many requests. Please wait a moment and try again.
+
+Timeout Handling
+
+LLM requests use timeout protection so slow provider responses do not leave the application waiting indefinitely.
+
+Error Handling
+
+The application catches processing failures and returns user-friendly error messages instead of exposing raw exceptions.
+
+Empty Response Handling
+
+If the LLM completes without producing usable final content, the application returns:
+
+The AI could not generate a response.
+Please try a shorter or simpler request.
+
+Calculator Safety
+
+The calculator uses Python AST parsing rather than unrestricted eval().
+
+Protection includes:
+
+Expression length limit
+
+Maximum number size
+
+AST node complexity limit
+
+Restricted arithmetic operations
+
+Division-by-zero handling
+
+Invalid-expression handling
 
 Current Production Roadmap
 
-Input Protection        ✅
-Token Tracking          ✅
-Usage Persistence       ✅
-Usage Aggregation       ✅
-Cost Estimation         ✅
-Token Budget            ✅
-Rate Limiting           ⏸️
-Timeouts & Retries      ⏳
-Tool Safety             ⏳
-Error Handling          ⏳
-Logging & Monitoring    ⏳
-Authentication          ⏳
-User Isolation          ⏳
-
-Technology Stack
-Python
-Streamlit
-LangGraph
-LangChain
-Groq API
-SQLite
-LangGraph SQLite Checkpointing
-Architecture
-Streamlit UI
-     ↓
-Thread / Chat Management
-     ↓
-LangGraph
-     ↓
-Agent / Tool Loop
-     ↓
-LLM
-     ↓
-Groq API
-
-Persistent application data
-     ↓
-SQLite
-
-LLM checkpoint state
-     ↓
-SQLite Checkpointer
-Production Engineering Focus
-
-The project is being developed incrementally with emphasis on:
-
-Cost control
-Token usage visibility
-Request protection
-Persistent state
-Tool execution
-Error handling
-Reliability
-Security
-Observability
-Scalability
-
-### One correction before you commit
-
-Set this back to:
-
-```python
-MAX_REQUESTS = 5
+Input Protection          ✅
+Token Tracking            ✅
+Usage Persistence          ✅
+Usage Aggregation          ✅
+Cost Estimation            ✅
+Token Budget               ✅
+Rate Limiting              ✅
+Timeout Handling           ✅
+Error Handling             ✅
+Tool Safety                ✅
+Empty Response Handling    ✅
+Logging & Monitoring       ⏳
+Authentication             ⏳
+User Isolation             ⏳
+Responsive UI Cleanup      ⏳
+Final Regression Testing   ⏳

@@ -432,24 +432,49 @@ if user_input:
 
         try:
 
+            rate_limit_error = False
+
             for event in stream_chatbot(user_input, current_thread_id):
 
                 if event["type"] == "tool":
-                    thinking_placeholder.markdown("🔧 Using calculator...")
+
+                    thinking_placeholder.markdown(
+                        "🔧 Using calculator..."
+                    )
+
+                    tool_content = event.get("content", "")
+
+                    if tool_content:
+                        message_placeholder.markdown(
+                            f"**Calculator:** {tool_content}"
+                        )
 
                 elif event["type"] == "message":
+
                     if first_chunk:
                         thinking_placeholder.empty()
                         first_chunk = False
 
                     full_response += event["content"]
-                    message_placeholder.markdown(full_response + "▌")
-                elif event["type"] == "error":
-                    thinking_placeholder.empty()
-                    message_placeholder.error(event["content"]) 
-                    break  
 
-            message_placeholder.markdown(full_response)
+                    message_placeholder.markdown(
+                        full_response + "▌"
+                    )
+
+                elif event["type"] == "error":
+
+                    thinking_placeholder.empty()
+
+                    message_placeholder.error(
+                        event["content"]
+                    )
+
+                    rate_limit_error = True
+
+                    break
+
+            if not rate_limit_error:
+                message_placeholder.markdown(full_response)
 
         except Exception as e:
 
