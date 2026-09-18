@@ -6,8 +6,9 @@ from graph import chatbot_graph, checkpointer
 INPUT_COST_PER_1M = 0.00
 OUTPUT_COST_PER_1M = 0.00
 MAX_THREAD_TOKENS = 10000
-MAX_REQUESTS = 2
+MAX_REQUESTS = 4
 RATE_LIMIT_WINDOW_SECONDS = 60
+MAX_MESSAGE_LENGTH = 4000
 
 DB_PATH = "chatbot.db"
 
@@ -355,6 +356,16 @@ def chatbot(message, thread_id):
 # ---------------- STREAMING CHAT ----------------
 
 def stream_chatbot(message, thread_id):
+    
+    if len(message) > MAX_MESSAGE_LENGTH:
+        yield {
+            "type": "error",
+            "content": (
+                f"Your message is too long. "
+                f"Please keep it under {MAX_MESSAGE_LENGTH} characters."
+            )
+        }
+        return
 
     # 1. Check token budget
     if has_exceeded_token_budget(thread_id):

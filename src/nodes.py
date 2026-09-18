@@ -2,6 +2,11 @@ from state import ChatState
 from llm import llm
 from tools.calculator import calculator
 from langchain_core.messages import SystemMessage
+MAX_HISTORY_MESSAGES = 10
+
+def get_recent_messages(messages):
+    return messages[-MAX_HISTORY_MESSAGES:]
+
 
 tools = [
     calculator,
@@ -13,7 +18,7 @@ llm_with_tools = llm.bind_tools(tools)
 
 def chat_node(state: ChatState):
 
-    messages = state["messages"]
+    messages = get_recent_messages(state["messages"])
 
     system_message = SystemMessage(
         content="""

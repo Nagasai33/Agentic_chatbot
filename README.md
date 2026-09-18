@@ -98,106 +98,109 @@ Current implemented tool:
 
 The calculator supports basic arithmetic operations:
 
-+
--
-*
+
+
+
+
+
+
 /
 
 🧠 Agentic Architecture
 
-                         ┌─────────────────┐
-                         │    Streamlit    │
-                         │     app.py      │
-                         └────────┬────────┘
-                                  │
-                                  ↓
-                         ┌─────────────────┐
-                         │   threads.py    │
-                         │ Conversations   │
-                         │ + DB operations │
-                         └────────┬────────┘
-                                  │
-                                  ↓
-                         ┌─────────────────┐
-                         │    LangGraph    │
-                         │    graph.py     │
-                         └────────┬────────┘
-                                  │
-                         ┌────────┴────────┐
-                         ↓                 ↓
-                  ┌──────────────┐  ┌──────────────┐
-                  │  chat_node   │  │   ToolNode   │
-                  └──────┬───────┘  └──────┬───────┘
-                         │                 │
-                         ↓                 ↓
-                  ┌──────────────┐  ┌──────────────┐
-                  │  Groq LLM    │  │  Calculator  │
-                  └──────┬───────┘  └──────┬───────┘
-                         │                 │
-                         └────────┬────────┘
-                                  ↓
-                           Final Response
+                     ┌─────────────────┐
+                     │    Streamlit    │
+                     │     app.py      │
+                     └────────┬────────┘
+                              │
+                              ↓
+                     ┌─────────────────┐
+                     │   threads.py    │
+                     │ Conversations   │
+                     │ + DB operations │
+                     └────────┬────────┘
+                              │
+                              ↓
+                     ┌─────────────────┐
+                     │    LangGraph    │
+                     │    graph.py     │
+                     └────────┬────────┘
+                              │
+                     ┌────────┴────────┐
+                     ↓                 ↓
+              ┌──────────────┐  ┌──────────────┐
+              │  chat_node   │  │   ToolNode   │
+              └──────┬───────┘  └──────┬───────┘
+                     │                 │
+                     ↓                 ↓
+              ┌──────────────┐  ┌──────────────┐
+              │  Groq LLM    │  │  Calculator  │
+              └──────┬───────┘  └──────┬───────┘
+                     │                 │
+                     └────────┬────────┘
+                              ↓
+                       Final Response
 
 🔄 Current Agent Workflow
 
 User
- ↓
+↓
 Streamlit
- ↓
+↓
 threads.py
- ↓
+↓
 LangGraph
- ↓
+↓
 chat_node
- ↓
+↓
 LLM
- ↓
+↓
 Final response
 For a tool-enabled question:
 
 User
- ↓
+↓
 Streamlit
- ↓
+↓
 threads.py
- ↓
+↓
 LangGraph
- ↓
+↓
 chat_node
- ↓
+↓
 LLM decides tool is required
- ↓
+↓
 ToolNode
- ↓
+↓
 Calculator
- ↓
+↓
 ToolMessage
- ↓
+↓
 chat_node
- ↓
+↓
 LLM generates final answer
- ↓
+↓
 Streamlit streams response
 
 Example:
 User:
 Calculate 25 * 45
 
-        ↓
+    ↓
 
 LLM requests calculator
 
-        ↓
+    ↓
 
 Calculator:
 25 * 45
 
-        ↓
+    ↓
 
 Tool result:
 1125
 
-        ↓
+    ↓
 
 LLM:
 The result is 1125.
@@ -207,7 +210,7 @@ The result is 1125.
 Agentic_chatbot/
 │
 ├── src/
-│   ├── __init__.py
+│   ├── init.py
 │   │
 │   ├── app.py
 │   │   # Streamlit UI
@@ -234,7 +237,7 @@ Agentic_chatbot/
 │   │   # Streaming interface
 │   │
 │   └── tools/
-│       ├── __init__.py
+│       ├── init.py
 │       └── calculator.py
 │           # Safe arithmetic calculator tool
 │
@@ -254,7 +257,7 @@ Agentic_chatbot/
 └── README.md
 
 🧩 Core Components
- app.py
+app.py
 
 Responsible for the Streamlit user interface.
 
@@ -271,7 +274,7 @@ Conversation rename
 Conversation archive
 UI state management
 
- threads.py
+threads.py
 
 Responsible for conversation and application-level database operations.
 
@@ -287,7 +290,6 @@ Retrieving conversation state
 Streaming chatbot responses
 
 This module acts as a bridge between the Streamlit UI and LangGraph.
-
 
 graph.py
 
@@ -306,20 +308,20 @@ Compiling the graph
 Current workflow:
 
 START
-  ↓
+↓
 chat_node
-  ↓
+↓
 tools_condition
-  ↓
- ┌───────────────┐
- │               │
- ↓               ↓
+↓
+┌───────────────┐
+│               │
+↓               ↓
 tools           END
- │
- ↓
+│
+↓
 chat_node
- │
- ↓
+│
+↓
 END
 nodes.py
 
@@ -341,10 +343,10 @@ Defines the LangGraph conversation state.
 Current state:
 
 class ChatState(TypedDict):
-    messages: Annotated[
-        list[BaseMessage],
-        add_messages
-    ]
+messages: Annotated[
+list[BaseMessage],
+add_messages
+]
 
 The message history can contain different message types such as:
 
@@ -361,9 +363,9 @@ Contains the LLM configuration.
 The application currently uses:
 
 Groq
-  ↓
+↓
 OpenAI-compatible API
-  ↓
+↓
 LangChain ChatOpenAI
 
 The API key is loaded from environment variables rather than being hard-coded.
@@ -375,17 +377,17 @@ The project uses LangChain tools together with LangGraph's ToolNode.
 The architecture is:
 
 LLM
- ↓
+↓
 Tool Call
- ↓
+↓
 LangGraph
- ↓
+↓
 ToolNode
- ↓
+↓
 Tool
- ↓
+↓
 Tool Result
- ↓
+↓
 LLM
 
 The LLM does not directly execute Python functions.
@@ -438,16 +440,15 @@ The thread ID allows LangGraph to keep different conversations isolated.
 Conceptually:
 
 Conversation A
-     ↓
+↓
 thread_id = A
-     ↓
+↓
 State A
 
-
 Conversation B
-     ↓
+↓
 thread_id = B
-     ↓
+↓
 State B
 
 Messages from one conversation are not automatically mixed with another conversation.
@@ -458,14 +459,15 @@ The application uses SQLite for persistent storage.
 
 There are two conceptually different types of data:
 
-                         chatbot.db
-                             │
-                 ┌───────────┴───────────┐
-                 ↓                       ↓
-       Application Database      LangGraph Checkpointer
-                 │                       │
-                 ↓                       ↓
-          Chat Metadata          Conversation State
+                     chatbot.db
+                         │
+             ┌───────────┴───────────┐
+             ↓                       ↓
+   Application Database      LangGraph Checkpointer
+             │                       │
+             ↓                       ↓
+      Chat Metadata          Conversation State
+
 Application Database
 
 Stores application-level information such as:
@@ -522,32 +524,32 @@ Example:
 User:
 "My name is Sai."
 
-        ↓
+    ↓
 
 Conversation state saved
 
-        ↓
+    ↓
 
 Application closes
 
-        ↓
+    ↓
 
 Application restarts
 
-        ↓
+    ↓
 
 User opens previous conversation
 
-        ↓
+    ↓
 
 Previous state is loaded
 
-        ↓
+    ↓
 
 User:
 "What is my name?"
 
-        ↓
+    ↓
 
 AI:
 "Your name is Sai."
@@ -555,9 +557,9 @@ AI:
 This is achieved using:
 
 LangGraph
-    ↓
+↓
 SqliteSaver
-    ↓
+↓
 SQLite
 ⚡ Real-Time Streaming
 
@@ -566,29 +568,29 @@ The chatbot supports real-time response streaming.
 Instead of:
 
 User
- ↓
+↓
 LLM
- ↓
+↓
 Wait
- ↓
+↓
 Complete response
- ↓
+↓
 Display
 
 the application receives chunks progressively:
 
 User
- ↓
+↓
 LLM
- ↓
+↓
 Chunk 1
- ↓
+↓
 Chunk 2
- ↓
+↓
 Chunk 3
- ↓
+↓
 Chunk 4
- ↓
+↓
 Streamlit
 
 This makes the application feel more responsive.
@@ -596,7 +598,7 @@ This makes the application feel more responsive.
 For tool-enabled conversations, the application combines:
 
 Message streaming
-        +
++
 Graph update events
 
 This allows the UI to display tool activity while preserving real-time response streaming.
@@ -621,12 +623,11 @@ Persistent application data is stored in SQLite.
 Therefore:
 
 st.session_state
-        ↓
+↓
 Temporary UI state
 
-
 SQLite
-        ↓
+↓
 Persistent application data
 🔐 Environment Variables
 
@@ -662,7 +663,8 @@ python-dotenv	Environment variable management
 Git	Version control
 GitHub	Source code hosting
 📦 Installation
-1. Clone the repository
+
+Clone the repository
 git clone <YOUR_GITHUB_REPOSITORY_URL>
 
 Navigate into the project:
@@ -743,9 +745,9 @@ Basic conversational flow
 Architecture:
 
 START
- ↓
+↓
 chat_node
- ↓
+↓
 END
 Step 2 — Persistent Chat
 
@@ -803,54 +805,90 @@ Status: ✅ Completed
 
 Implemented:
 
-- ChatGPT-style interface
-- Improved sidebar
-- Conversation controls
-- Message rendering
-- Streaming UX
-- Thinking/loading state
-- Rename functionality
-- Archive functionality
-- Active conversation indication
-- Improved conversation organization
-- Tool activity display
-- User-friendly error messages
+ChatGPT-style interface
+
+Improved sidebar
+
+Conversation controls
+
+Message rendering
+
+Streaming UX
+
+Thinking/loading state
+
+Rename functionality
+
+Archive functionality
+
+Active conversation indication
+
+Improved conversation organization
+
+Tool activity display
+
+User-friendly error messages
 
 Step 7 — Agentic Tools & Production Hardening
 
 Status: 🚧 In Progress
 
-### Phase A — Tool Calling Fundamentals
+Phase A — Tool Calling Fundamentals
 
 Status: ✅ Completed
 
-- Tool calling
-- `bind_tools()`
-- `ToolNode`
-- Conditional tool routing
-- `AIMessage`
-- `ToolMessage`
-- Agent vs LLM concepts
+Tool calling
 
-### Phase B — Calculator Tool
+bind_tools()
 
-Status: ✅ Completed
+ToolNode
 
-- Calculator tool
-- Safe arithmetic evaluation
-- AST-based expression parsing
-- Expression-length protection
-- Number-size protection
-- AST-complexity protection
-- Division-by-zero handling
-- Invalid-expression handling
-- Calculator testing
+Conditional tool routing
 
-### Phase C — LangGraph Agent/Tool Loop
+AIMessage
+
+ToolMessage
+
+Agent vs LLM concepts
+
+Phase B — Calculator Tool
 
 Status: ✅ Completed
 
-```text
+Calculator tool
+
+Safe arithmetic evaluation
+
+AST-based expression parsing
+
+Expression-length protection
+
+Number-size protection
+
+AST-complexity protection
+
+Division-by-zero handling
+
+Invalid-expression handling
+
+User-friendly calculation result formatting
+
+Example:
+
+User:
+
+Calculate (10 + 20) * 5
+
+Assistant:
+
+(10 + 20) × 5 = 150
+
+Calculator testing
+
+Phase C — LangGraph Agent/Tool Loop
+
+Status: ✅ Completed
+
 chat_node
     ↓
 tools_condition
@@ -927,7 +965,7 @@ The chatbot has been incrementally improved with production-oriented reliability
 
 Input Protection
 
-Maximum user message length: 10,000 characters.
+Maximum user message length: 4,000 characters.
 
 Oversized messages are rejected before reaching the LLM.
 
