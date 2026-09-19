@@ -662,6 +662,34 @@ LangGraph SQLite Checkpointer	Conversation persistence
 python-dotenv	Environment variable management
 Git	Version control
 GitHub	Source code hosting
+
+
+## Production Safety & Reliability
+
+The chatbot was improved with multiple safety, reliability, and resource-control mechanisms to make the application more robust and suitable for production-oriented development.
+
+### 1. Calculator Tool Safety
+
+The calculator tool is protected against unsafe and excessively complex expressions.
+
+Implemented protections include:
+
+- Maximum expression length
+- Maximum number of digits
+- Maximum AST node count
+- Safe AST-based expression evaluation
+- Division-by-zero handling
+- Invalid expression handling
+- General calculator error handling
+
+Current calculator limits include:
+
+```text
+MAX_EXPRESSION_LENGTH = 500
+MAX_NUMBER_DIGITS = 100
+MAX_AST_NODES = 100
+
+
 📦 Installation
 
 Clone the repository

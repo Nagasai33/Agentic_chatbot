@@ -2,10 +2,18 @@ from state import ChatState
 from llm import llm
 from tools.calculator import calculator
 from langchain_core.messages import SystemMessage
+
 MAX_HISTORY_MESSAGES = 10
 
 def get_recent_messages(messages):
-    return messages[-MAX_HISTORY_MESSAGES:]
+    recent_messages = messages[-MAX_HISTORY_MESSAGES:]
+
+    # If the first message in our window is a tool message,
+    # remove it so we don't start with an incomplete tool interaction.
+    while recent_messages and recent_messages[0].type == "tool":
+        recent_messages = recent_messages[1:]
+
+    return recent_messages
 
 
 tools = [
