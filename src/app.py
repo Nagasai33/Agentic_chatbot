@@ -442,13 +442,6 @@ if user_input:
                         "🔧 Using calculator..."
                     )
 
-                    tool_content = event.get("content", "")
-
-                    if tool_content:
-                        message_placeholder.markdown(
-                            f"**Calculator:** {tool_content}"
-                        )
-
                 elif event["type"] == "message":
 
                     if first_chunk:

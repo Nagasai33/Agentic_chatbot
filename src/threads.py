@@ -1,6 +1,7 @@
 import uuid
 import sqlite3
 from datetime import datetime, timedelta
+from langchain_core.messages import AIMessageChunk
 
 from graph import chatbot_graph, checkpointer
 INPUT_COST_PER_1M = 0.00
@@ -415,13 +416,14 @@ def stream_chatbot(message, thread_id):
                         total_tokens=usage.get("total_tokens", 0)
                     )
 
-                if message_chunk.content:
-                    response_generated = True
+                if isinstance(message_chunk, AIMessageChunk):
+                        if message_chunk.content:
+                            response_generated = True
 
-                    yield {
-                        "type": "message",
-                        "content": message_chunk.content
-                    }
+                            yield {
+                                "type": "message",
+                                "content": message_chunk.content
+                            }
 
             elif mode == "updates":
 

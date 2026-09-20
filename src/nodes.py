@@ -4,6 +4,16 @@ from tools.calculator import calculator
 from langchain_core.messages import SystemMessage
 
 MAX_HISTORY_MESSAGES = 10
+MAX_HISTORY_TOKENS = 2000
+
+
+def estimate_message_tokens(message):
+    content = getattr(message, "content", "")
+
+    if not isinstance(content, str):
+        content = str(content)
+
+    return max(1, len(content) // 4)
 
 def get_recent_messages(messages):
     recent_messages = messages[-MAX_HISTORY_MESSAGES:]
