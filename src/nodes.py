@@ -1,6 +1,7 @@
 from state import ChatState
 from llm import llm
 from tools.calculator import calculator
+from tools.web_search import web_search
 from langchain_core.messages import SystemMessage
 
 MAX_HISTORY_MESSAGES = 10
@@ -16,18 +17,38 @@ def estimate_message_tokens(message):
     return max(1, len(content) // 4)
 
 def get_recent_messages(messages):
-    recent_messages = messages[-MAX_HISTORY_MESSAGES:]
+    selected_messages = []
+    total_tokens = 0
 
-    # If the first message in our window is a tool message,
-    # remove it so we don't start with an incomplete tool interaction.
-    while recent_messages and recent_messages[0].type == "tool":
-        recent_messages = recent_messages[1:]
+    # Start from the newest message
+    for message in reversed(messages):
 
-    return recent_messages
+        message_tokens = estimate_message_tokens(message)
+
+        # Don't exceed the history token budget
+        if total_tokens + message_tokens > MAX_HISTORY_TOKENS:
+            break
+
+        selected_messages.append(message)
+        total_tokens += message_tokens
+
+        # Also respect the message-count limit
+        if len(selected_messages) >= MAX_HISTORY_MESSAGES:
+            break
+
+    # Restore the original conversation order
+    selected_messages.reverse()
+
+    # Don't start with an orphaned tool result
+    while selected_messages and selected_messages[0].type == "tool":
+        selected_messages.pop(0)
+
+    return selected_messages
 
 
 tools = [
     calculator,
+    web_search,
 ]
 
 
@@ -63,6 +84,17 @@ Good response: (10 + 20) × 5 = 150
 
 User: Calculate 1 + 2 + 3 + 4 + 5
 Good response: 1 + 2 + 3 + 4 + 5 = 15
+
+
+Web search instructions:
+
+- You have access to a web search tool.
+- Use the web search tool when the user asks for current, recent, latest, today's, or time-sensitive information.
+- Use the web search tool when the user asks about events or developments after your knowledge cutoff.
+- Do not claim that you cannot provide current information when the web search tool can find it.
+- After receiving web search results, use those results to answer the user's question clearly.
+- Do not show the raw tool output to the user.
+- If the user asks a simple general question that does not require current information, you can answer directly without web search.
 """
     )
 

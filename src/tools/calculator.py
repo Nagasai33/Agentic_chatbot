@@ -53,30 +53,21 @@ def _evaluate(node):
 
 @tool
 def calculator(expression: str) -> str:
-    """Evaluate a basic arithmetic expression using +, -, *, and /."""
+    """
+    Use this tool ONLY for mathematical calculations.
 
-    if not isinstance(expression, str):
-        return "Calculator error: Invalid expression."
+    Use it when the user explicitly asks you to calculate,
+    add, subtract, multiply, divide, or evaluate an arithmetic expression.
 
-    if len(expression) > MAX_EXPRESSION_LENGTH:
-        return "Calculator error: Expression is too long."
+    Do NOT use this tool for:
+    - web searches
+    - latest or current information
+    - news
+    - software versions
+    - dates or events
+    - general questions
+    - factual questions
 
-    try:
-        tree = ast.parse(expression, mode="eval")
-
-        node_count = sum(1 for _ in ast.walk(tree))
-
-        if node_count > MAX_AST_NODES:
-            return "Calculator error: Expression is too complex."
-
-        result = _evaluate(tree)
-        return str(result)
-
-    except ZeroDivisionError:
-        return "Calculator error: Cannot divide by zero."
-
-    except (SyntaxError, ValueError, TypeError) as e:
-        return f"Calculator error: {e}"
-
-    except Exception:
-        return "Calculator error: Invalid expression."
+    Input must be a basic arithmetic expression using numbers
+    and +, -, *, or /.
+    """
