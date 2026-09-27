@@ -1,1080 +1,763 @@
-🤖 Agentic AI Chatbot
+# 🤖 Agentic AI Chatbot
 
-A modular, persistent, and tool-enabled conversational AI application built with Python, LangGraph, LangChain, Groq, SQLite, and Streamlit.
+A production-oriented conversational AI chatbot built with **Python, LangGraph, LangChain, Groq, Tavily, SQLite, and Streamlit**.
 
-This project is being developed incrementally to demonstrate how a simple LLM chatbot can evolve into a more capable Agentic AI system with persistent conversations, tool calling, streaming responses, file understanding, RAG, web search, and multimodal capabilities.
+The application combines an LLM with external tools so that the chatbot can decide when to answer directly, perform calculations, or search the web for current information.
 
-🚀 Project Overview
+---
 
-The goal of this project is to build an AI assistant that can:
+## 🚀 Features
 
-Maintain multiple conversations
+- 💬 ChatGPT-style conversational interface
+- 🧵 Multiple independent conversations
+- 🆔 Unique `thread_id` for each conversation
+- 💾 Persistent conversations using SQLite
+- 🔄 Resume previous conversations after application restart
+- ⚡ Real-time LLM response streaming
+- 📝 Automatic conversation titles
+- ✏️ Rename conversations
+- 📦 Archive conversations
+- 🧠 LangGraph-based agent workflow
+- 🧮 Safe calculator tool
+- 🔎 Tavily web-search tool
+- 🔀 Automatic tool selection by the LLM
+- 🔧 Tool activity indicators in the UI
+- 🛡️ Calculator input and complexity protection
+- 📏 Conversation history/token-budget control
+- 🔐 Environment-variable based API-key management
+- 📦 Dependency management with `requirements.txt`
 
-Persist conversations across application restarts
+---
 
-Resume previous conversations
+# 🏗️ Architecture
 
-Stream LLM responses in real time
+The chatbot follows an agentic tool-calling architecture.
 
-Execute external tools when required
+```text
+                         User
+                          │
+                          ▼
+                    Streamlit UI
+                       app.py
+                          │
+                          ▼
+                     threads.py
+                          │
+                          ▼
+                     LangGraph
+                       graph.py
+                          │
+                          ▼
+                      chat_node
+                       nodes.py
+                          │
+                          ▼
+                       Groq LLM
+                    gpt-oss-20b
+                          │
+                ┌─────────┴─────────┐
+                │                   │
+          Direct Answer        Tool Required
+                                    │
+                              ┌─────┴─────┐
+                              │           │
+                              ▼           ▼
+                         Calculator    Tavily
+                              │        Web Search
+                              └─────┬─────┘
+                                    │
+                                    ▼
+                               Tool Result
+                                    │
+                                    ▼
+                                  LLM
+                                    │
+                                    ▼
+                              Final Response
+```
 
-Display tool activity in the UI
+---
 
-Process uploaded documents
+# 🔄 Agent Workflow
 
-Perform document-based question answering using RAG
+For a normal question:
 
-Search the web
-
-Work with multiple tools
-
-Support image understanding
-
-Evolve toward a production-oriented Agentic AI architecture
-
-The project is intentionally developed one capability at a time, with each feature implemented, tested, and integrated before moving to the next stage.
-
-✨ Current Features
-
-💬 Conversational AI
-
-ChatGPT-style conversational interface
-
-Multiple independent conversations
-
-Unique thread_id for every conversation
-
-Conversation history
-
-Resume previous conversations
-
-Conversation context maintained by LangGraph
-
-⚡ Real-Time Streaming
-
-Real LLM response streaming
-
-Progressive token display
-
-"Thinking" state while generating
-
-Improved perceived response latency
-
-Streaming works with persistent conversations
-
-🧵 Conversation Management
-
-Create new conversations
-
-Switch between conversations
-
-Automatically generated conversation titles
-
-Rename conversations
-
-Archive conversations
-
-Active/archived conversation management
-
-💾 Persistent Storage
-
-SQLite-based persistence
-
-LangGraph checkpoint persistence
-
-Application-level chat metadata
-
-Conversations survive application restarts
-
-Separation between application metadata and LangGraph state
-
-🛠️ Agentic Tool Calling
-
-The chatbot can allow the LLM to decide when a tool is required.
-
-Current implemented tool:
-
-🧮 Calculator
-
-The calculator supports basic arithmetic operations:
-
-
-
-
-
-
-
-/
-
-🧠 Agentic Architecture
-
-                     ┌─────────────────┐
-                     │    Streamlit    │
-                     │     app.py      │
-                     └────────┬────────┘
-                              │
-                              ↓
-                     ┌─────────────────┐
-                     │   threads.py    │
-                     │ Conversations   │
-                     │ + DB operations │
-                     └────────┬────────┘
-                              │
-                              ↓
-                     ┌─────────────────┐
-                     │    LangGraph    │
-                     │    graph.py     │
-                     └────────┬────────┘
-                              │
-                     ┌────────┴────────┐
-                     ↓                 ↓
-              ┌──────────────┐  ┌──────────────┐
-              │  chat_node   │  │   ToolNode   │
-              └──────┬───────┘  └──────┬───────┘
-                     │                 │
-                     ↓                 ↓
-              ┌──────────────┐  ┌──────────────┐
-              │  Groq LLM    │  │  Calculator  │
-              └──────┬───────┘  └──────┬───────┘
-                     │                 │
-                     └────────┬────────┘
-                              ↓
-                       Final Response
-
-🔄 Current Agent Workflow
-
+```text
 User
-↓
+ ↓
 Streamlit
-↓
-threads.py
-↓
+ ↓
 LangGraph
-↓
-chat_node
-↓
+ ↓
 LLM
-↓
-Final response
-For a tool-enabled question:
+ ↓
+Final Answer
+```
 
+For a calculation:
+
+```text
 User
-↓
-Streamlit
-↓
-threads.py
-↓
-LangGraph
-↓
+ ↓
+LLM
+ ↓
+Calculator Tool
+ ↓
+Tool Result
+ ↓
+LLM
+ ↓
+Final Answer
+```
+
+For a current-information question:
+
+```text
+User
+ ↓
+LLM
+ ↓
+Tavily Web Search
+ ↓
+Search Results
+ ↓
+LLM
+ ↓
+Final Answer
+```
+
+The LLM decides whether a tool is required.
+
+---
+
+# 🧠 LangGraph Workflow
+
+The graph contains an agent node and a tool execution node.
+
+```text
+START
+  │
+  ▼
 chat_node
-↓
-LLM decides tool is required
-↓
+  │
+  ▼
+tools_condition
+  │
+  ├───────────────► END
+  │
+  ▼
 ToolNode
-↓
-Calculator
-↓
-ToolMessage
-↓
+  │
+  ▼
+Tool
+  │
+  ▼
 chat_node
-↓
-LLM generates final answer
-↓
-Streamlit streams response
+  │
+  ▼
+END
+```
+
+The tool loop allows the LLM to:
+
+1. Receive the user request.
+2. Decide whether a tool is necessary.
+3. Request the appropriate tool.
+4. Execute the tool through LangGraph's `ToolNode`.
+5. Receive the tool result.
+6. Generate the final response.
+
+---
+
+# 🛠️ Tools
+
+## 🧮 Calculator
+
+The calculator supports:
+
+- Addition
+- Subtraction
+- Multiplication
+- Division
 
 Example:
+
+```text
 User:
 Calculate 25 * 45
 
-    ↓
+Assistant:
+25 × 45 = 1125
+```
 
-LLM requests calculator
+The calculator does **not** use unrestricted Python `eval()`.
 
-    ↓
+Instead, the expression is parsed using Python's `ast` module and only explicitly allowed arithmetic operations are evaluated.
 
-Calculator:
-25 * 45
-
-    ↓
-
-Tool result:
-1125
-
-    ↓
-
-LLM:
-The result is 1125.
-
-🏗️ Project Structure
-
-Agentic_chatbot/
-│
-├── src/
-│   ├── init.py
-│   │
-│   ├── app.py
-│   │   # Streamlit UI
-│   │
-│   ├── graph.py
-│   │   # LangGraph workflow
-│   │   # ToolNode
-│   │   # Conditional routing
-│   │   # SQLite checkpointer
-│   │
-│   ├── llm.py
-│   │   # LLM configuration
-│   │
-│   ├── nodes.py
-│   │   # LangGraph nodes
-│   │   # Tool binding
-│   │
-│   ├── state.py
-│   │   # LangGraph state definition
-│   │
-│   ├── threads.py
-│   │   # Conversation management
-│   │   # Application database operations
-│   │   # Streaming interface
-│   │
-│   └── tools/
-│       ├── init.py
-│       └── calculator.py
-│           # Safe arithmetic calculator tool
-│
-├── tests/
-│   # Test files
-│
-├── .env
-│   # API keys - NOT committed
-│
-├── .gitignore
-│
-├── chatbot.db
-│   # Local SQLite database - NOT committed
-│
-├── requirements.txt
-│
-└── README.md
-
-🧩 Core Components
-app.py
-
-Responsible for the Streamlit user interface.
-
-Responsibilities include:
-
-Chat interface
-Sidebar
-New conversation creation
-Conversation switching
-Message rendering
-Streaming responses
-Tool activity display
-Conversation rename
-Conversation archive
-UI state management
-
-threads.py
-
-Responsible for conversation and application-level database operations.
-
-Responsibilities include:
-
-Creating conversations
-Generating thread_id
-Loading conversations
-Updating conversation metadata
-Renaming conversations
-Archiving conversations
-Retrieving conversation state
-Streaming chatbot responses
-
-This module acts as a bridge between the Streamlit UI and LangGraph.
-
-graph.py
-
-Responsible for constructing the LangGraph workflow.
-
-Responsibilities include:
-
-Creating the StateGraph
-Adding graph nodes
-Adding workflow edges
-Conditional tool routing
-Adding ToolNode
-Configuring SQLite persistence
-Compiling the graph
-
-Current workflow:
-
-START
-↓
-chat_node
-↓
-tools_condition
-↓
-┌───────────────┐
-│               │
-↓               ↓
-tools           END
-│
-↓
-chat_node
-│
-↓
-END
-nodes.py
-
-Contains the LangGraph node functions.
-
-The chatbot node:
-
-Receives conversation state
-Sends messages to the LLM
-Allows the LLM to request available tools
-Returns the generated AI message
-
-The LLM is connected to tools using LangChain's tool-binding mechanism.
-
-state.py
-
-Defines the LangGraph conversation state.
-
-Current state:
-
-class ChatState(TypedDict):
-messages: Annotated[
-list[BaseMessage],
-add_messages
-]
-
-The message history can contain different message types such as:
-
-HumanMessage
-AIMessage
-ToolMessage
-
-This allows the graph to preserve the complete tool-calling interaction.
-
-llm.py
-
-Contains the LLM configuration.
-
-The application currently uses:
-
-Groq
-↓
-OpenAI-compatible API
-↓
-LangChain ChatOpenAI
-
-The API key is loaded from environment variables rather than being hard-coded.
-
-🛠️ Tool Architecture
-
-The project uses LangChain tools together with LangGraph's ToolNode.
-
-The architecture is:
-
-LLM
-↓
-Tool Call
-↓
-LangGraph
-↓
-ToolNode
-↓
-Tool
-↓
-Tool Result
-↓
-LLM
-
-The LLM does not directly execute Python functions.
-
-Instead:
-
-The LLM requests a tool.
-LangGraph detects the tool call.
-ToolNode executes the requested tool.
-The result is added as a ToolMessage.
-The LLM receives the tool result.
-The LLM generates the final response.
-🧮 Calculator Tool
-
-The calculator is implemented as a LangChain tool.
-
-It supports:
-
-Addition
-Subtraction
-Multiplication
-Division
-
-Example:
-
-Input:
-25 * 45
-
-Output:
-1125
-
-The calculator does not use Python's unrestricted eval().
-
-Instead, the expression is parsed using Python's AST module and only explicitly allowed arithmetic operations are evaluated.
-
-This reduces the risk of arbitrary Python code execution.
-
-🧵 Thread-Based Conversations
-
-Every conversation receives a unique thread_id.
-
-Example:
-
-thread_A → Conversation A
-thread_B → Conversation B
-thread_C → Conversation C
-
-The thread ID allows LangGraph to keep different conversations isolated.
-
-Conceptually:
-
-Conversation A
-↓
-thread_id = A
-↓
-State A
-
-Conversation B
-↓
-thread_id = B
-↓
-State B
-
-Messages from one conversation are not automatically mixed with another conversation.
-
-💾 Persistence Architecture
-
-The application uses SQLite for persistent storage.
-
-There are two conceptually different types of data:
-
-                     chatbot.db
-                         │
-             ┌───────────┴───────────┐
-             ↓                       ↓
-   Application Database      LangGraph Checkpointer
-             │                       │
-             ↓                       ↓
-      Chat Metadata          Conversation State
-
-Application Database
-
-Stores application-level information such as:
-
-thread_id
-title
-created_at
-updated_at
-archived
-LangGraph Checkpointer
-
-Stores the graph's persistent conversation state and checkpoints.
-
-This separation avoids unnecessarily duplicating the entire message history in the application metadata table.
-
-🗃️ Application Database Schema
-
-The application maintains a chats table.
-
-Conceptually:
-
-chats
-├── thread_id
-├── title
-├── created_at
-├── updated_at
-└── archived
-thread_id
-
-Unique identifier for a conversation.
-
-title
-
-Conversation title displayed in the Streamlit sidebar.
-
-created_at
-
-Time when the conversation was created.
-
-updated_at
-
-Time when the conversation was last updated.
-
-archived
-
-Indicates whether the conversation is active or archived.
-
-0 → Active
-1 → Archived
-🔁 Conversation Persistence
-
-Example:
-
-User:
-"My name is Sai."
-
-    ↓
-
-Conversation state saved
-
-    ↓
-
-Application closes
-
-    ↓
-
-Application restarts
-
-    ↓
-
-User opens previous conversation
-
-    ↓
-
-Previous state is loaded
-
-    ↓
-
-User:
-"What is my name?"
-
-    ↓
-
-AI:
-"Your name is Sai."
-
-This is achieved using:
-
-LangGraph
-↓
-SqliteSaver
-↓
-SQLite
-⚡ Real-Time Streaming
-
-The chatbot supports real-time response streaming.
-
-Instead of:
-
-User
-↓
-LLM
-↓
-Wait
-↓
-Complete response
-↓
-Display
-
-the application receives chunks progressively:
-
-User
-↓
-LLM
-↓
-Chunk 1
-↓
-Chunk 2
-↓
-Chunk 3
-↓
-Chunk 4
-↓
-Streamlit
-
-This makes the application feel more responsive.
-
-For tool-enabled conversations, the application combines:
-
-Message streaming
-+
-Graph update events
-
-This allows the UI to display tool activity while preserving real-time response streaming.
-
-Example:
-
-🔧 Using calculator...
-
-The result of 25 × 45 is 1125.
-🧠 Session State vs Persistent State
-
-The application uses Streamlit session state for temporary UI information.
-
-Examples:
-
-Current selected conversation
-Currently edited conversation
-Temporary UI state
-
-Persistent application data is stored in SQLite.
-
-Therefore:
-
-st.session_state
-↓
-Temporary UI state
-
-SQLite
-↓
-Persistent application data
-🔐 Environment Variables
-
-API keys are stored in a .env file.
-
-Example:
-
-GROQ_API_KEY=your_groq_api_key
-
-The application loads the key through environment variables.
-
-Security
-
-Never:
-
-Hard-code API keys
-Commit .env
-Publish API keys
-Put secrets inside source code
-
-The .env file is excluded through .gitignore.
-
-🛠️ Tech Stack
-Technology	Purpose
-Python	Core programming language
-LangGraph	Agent/workflow orchestration
-LangChain	LLM and tool integration
-Groq	LLM inference
-Streamlit	Web UI
-SQLite	Persistent storage
-LangGraph SQLite Checkpointer	Conversation persistence
-python-dotenv	Environment variable management
-Git	Version control
-GitHub	Source code hosting
-
-
-## Production Safety & Reliability
-
-The chatbot was improved with multiple safety, reliability, and resource-control mechanisms to make the application more robust and suitable for production-oriented development.
-
-### 1. Calculator Tool Safety
-
-The calculator tool is protected against unsafe and excessively complex expressions.
-
-Implemented protections include:
-
-- Maximum expression length
-- Maximum number of digits
-- Maximum AST node count
-- Safe AST-based expression evaluation
-- Division-by-zero handling
-- Invalid expression handling
-- General calculator error handling
-
-Current calculator limits include:
+### Calculator safety controls
 
 ```text
 MAX_EXPRESSION_LENGTH = 500
 MAX_NUMBER_DIGITS = 100
 MAX_AST_NODES = 100
+```
 
+The calculator also handles:
 
-📦 Installation
+- Division by zero
+- Invalid expressions
+- Excessively large numbers
+- Overly complex expressions
+- Invalid input types
 
-Clone the repository
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+---
 
-Navigate into the project:
+# 🔎 Tavily Web Search
 
-cd Agentic_chatbot
-2. Create a virtual environment
-python -m venv venv
-
-Activate it on Windows PowerShell:
-
-.\venv\Scripts\Activate.ps1
-3. Install dependencies
-pip install -r requirements.txt
-🔑 Configure Environment Variables
-
-Create a .env file in the project root:
-
-GROQ_API_KEY=your_groq_api_key
-
-Do not commit this file to GitHub.
-
-▶️ Run the Application
-
-From the project root:
-
-streamlit run src/app.py
-
-The application will open in your browser.
-
-🧪 Testing
-
-The project is tested incrementally as new capabilities are added.
-
-Current tested functionality includes:
-
-Conversation Management
-Create new conversation ✅
-Switch conversations ✅
-Multiple conversation isolation ✅
-Rename conversation ✅
-Archive conversation ✅
-Persistence
-Save conversation state ✅
-Restart application ✅
-Recover previous conversations ✅
-Resume existing conversation ✅
-Streaming
-Real LLM streaming ✅
-Progressive token display ✅
-Streaming with persistent conversations ✅
-Tool Calling
-Calculator tool invocation ✅
-Tool execution through ToolNode ✅
-Tool result returned to LLM ✅
-Final response after tool execution ✅
-Tool activity displayed in UI ✅
-Normal questions bypass calculator ✅
-Calculator Security
-Basic arithmetic supported ✅
-Restricted AST evaluation ✅
-No unrestricted eval() execution ✅
-🗺️ Development Roadmap
-
-The project is being developed incrementally.
-
-Step 1 — Simple LangGraph Chatbot
-
-Status: ✅ Completed
-
-Implemented:
-
-LangGraph workflow
-Chat state
-Chat node
-Groq LLM integration
-Basic conversational flow
-
-Architecture:
-
-START
-↓
-chat_node
-↓
-END
-Step 2 — Persistent Chat
-
-Status: ✅ Completed
-
-Implemented:
-
-Unique conversation threads
-thread_id
-SQLite persistence
-LangGraph SqliteSaver
-Persistent conversation state
-Conversation recovery after restart
-Step 3 — Streaming Responses
-
-Status: ✅ Completed
-
-Implemented:
-
-LangGraph streaming
-Progressive response rendering
-Real LLM streaming
-Streaming with persistent conversations
-Step 4 — Resume Conversations
-
-Status: ✅ Completed
-
-Implemented:
-
-Previous conversation retrieval
-Sidebar conversation selection
-Existing thread_id reuse
-Previous message loading
-Conversation continuation
-Multiple conversation isolation
-Step 5 — Database Integration
-
-Status: ✅ Completed
-
-Implemented:
-
-Application-level SQLite database
-chats table
-Chat metadata management
-Create chat
-Read chat
-Update chat
-Rename chat
-Archive chat
-Persistent titles
-Separation between application data and LangGraph state
-Step 6 — Advanced Chat UI
-
-Status: ✅ Completed
-
-Implemented:
-
-ChatGPT-style interface
-
-Improved sidebar
-
-Conversation controls
-
-Message rendering
-
-Streaming UX
-
-Thinking/loading state
-
-Rename functionality
-
-Archive functionality
-
-Active conversation indication
-
-Improved conversation organization
-
-Tool activity display
-
-User-friendly error messages
-
-Step 7 — Agentic Tools & Production Hardening
-
-Status: 🚧 In Progress
-
-Phase A — Tool Calling Fundamentals
-
-Status: ✅ Completed
-
-Tool calling
-
-bind_tools()
-
-ToolNode
-
-Conditional tool routing
-
-AIMessage
-
-ToolMessage
-
-Agent vs LLM concepts
-
-Phase B — Calculator Tool
-
-Status: ✅ Completed
-
-Calculator tool
-
-Safe arithmetic evaluation
-
-AST-based expression parsing
-
-Expression-length protection
-
-Number-size protection
-
-AST-complexity protection
-
-Division-by-zero handling
-
-Invalid-expression handling
-
-User-friendly calculation result formatting
+The chatbot uses **Tavily** to retrieve current information from the web.
 
 Example:
 
+```text
 User:
+What are the latest developments in AI agents in 2026?
+```
 
-Calculate (10 + 20) * 5
+The agent can decide to use Tavily instead of relying only on the LLM's training knowledge.
 
-Assistant:
+The current configuration uses a limited number of search results to reduce unnecessary context usage.
 
-(10 + 20) × 5 = 150
+```text
+Tavily
+  ↓
+Search Web
+  ↓
+Return Relevant Results
+  ↓
+LLM
+  ↓
+Current Answer
+```
 
-Calculator testing
+Example UI behavior:
 
-Phase C — LangGraph Agent/Tool Loop
+```text
+🔎 Searching the web...
+```
 
-Status: ✅ Completed
+---
 
-chat_node
-    ↓
-tools_condition
-    ↓
-ToolNode
-    ↓
-calculator
-    ↓
-chat_node
-    ↓
-final response
+# 🧠 Conversation History Management
 
-Phase D — Tool Activity in UI
+The application limits the amount of previous conversation history sent to the LLM.
 
-Status: ✅ Completed
+This helps control:
 
-Tool execution detection
+- Context size
+- API usage
+- Response latency
+- Token consumption
 
-Graph update streaming
+The current conversation-history configuration uses a token budget rather than sending unlimited history.
 
-Real token streaming
+The project also limits Tavily search results to reduce excessive context consumption.
 
-Tool activity display
+This is particularly important when using web search because search results can contain substantially more text than a normal conversation message.
 
-Calculator activity indicator
+---
 
-User-friendly calculator result formatting
+# 💾 Persistent Conversations
 
-Phase E — Production Safety & Reliability
+The application uses SQLite for persistence.
 
-Status: ✅ Completed
+There are two conceptual layers:
 
-Input-length protection
+```text
+                    chatbot.db
+                        │
+              ┌─────────┴─────────┐
+              │                   │
+              ▼                   ▼
+     Application Database    LangGraph Checkpointer
+              │                   │
+              ▼                   ▼
+       Chat Metadata       Conversation State
+```
 
-Token usage tracking
+### Application database
 
-Per-thread token usage
+Stores information such as:
 
-Token budget protection
+```text
+thread_id
+title
+created_at
+updated_at
+archived
+```
 
-Request rate limiting
+### LangGraph checkpointer
 
-Timeout handling
+Stores the graph's persistent conversation state.
 
-LLM/API error handling
+This allows users to close and restart the application without losing their conversations.
 
-Empty AI-response fallback
+---
 
-Safe calculator execution
+# 🧵 Thread-Based Conversations
 
-Calculator input protection
+Every conversation receives a unique `thread_id`.
 
-User-friendly error messages
+```text
+thread_A → Conversation A
 
-Phase F — Remaining UI & Testing
+thread_B → Conversation B
 
-Status: ⏳ Remaining
+thread_C → Conversation C
+```
 
-Responsive/visual UI cleanup
+This keeps conversations isolated.
 
-Final regression testing
+For example:
 
-End-to-end testing of safety and failure scenarios
+```text
+Conversation A
+      ↓
+thread_id = A
+      ↓
+State A
+
+
+Conversation B
+      ↓
+thread_id = B
+      ↓
+State B
+```
+
+Messages from one conversation are not automatically mixed with another conversation.
+
+---
+
+# ⚡ Real-Time Streaming
+
+The application streams LLM responses progressively.
+
+Instead of:
+
+```text
+User
+ ↓
+LLM
+ ↓
+Wait
+ ↓
+Complete response
+ ↓
+Display
+```
+
+the application uses:
+
+```text
+User
+ ↓
+LLM
+ ↓
+Chunk 1
+ ↓
+Chunk 2
+ ↓
+Chunk 3
+ ↓
+Chunk 4
+ ↓
+Streamlit
+```
+
+This improves perceived response latency.
+
+The UI also displays tool activity while tools are executing.
+
+Examples:
+
+```text
+🔧 Using calculator...
+```
+
+and:
+
+```text
+🔎 Searching the web...
+```
+
+---
+
+# 📁 Project Structure
+
+```text
+Agentic_chatbot/
+│
+├── src/
+│   ├── __init__.py
+│   ├── app.py
+│   │   └── Streamlit UI
+│   │
+│   ├── graph.py
+│   │   └── LangGraph workflow
+│   │
+│   ├── llm.py
+│   │   └── Groq LLM configuration
+│   │
+│   ├── nodes.py
+│   │   └── Agent node and tool binding
+│   │
+│   ├── state.py
+│   │   └── LangGraph state definition
+│   │
+│   ├── threads.py
+│   │   └── Conversation and database operations
+│   │
+│   └── tools/
+│       ├── __init__.py
+│       ├── calculator.py
+│       │   └── Safe calculator
+│       │
+│       └── web_search.py
+│           └── Tavily web search
+│
+├── test/
+│   └── test_tavily.py
+│
+├── .env
+│   └── API keys - NOT committed
+│
+├── .gitignore
+├── requirements.txt
+├── README.md
+└── chatbot.db
+    └── Local database - NOT committed
+```
+
+---
+
+# 🛠️ Technologies
+
+| Technology | Purpose |
+|---|---|
+| Python | Core programming language |
+| LangGraph | Agent workflow orchestration |
+| LangChain | LLM and tool integration |
+| Groq | LLM inference |
+| `gpt-oss-20b` | LLM used by the application |
+| Tavily | Web search |
+| Streamlit | Web interface |
+| SQLite | Persistent storage |
+| LangGraph SQLite Checkpointer | Conversation persistence |
+| python-dotenv | Environment variable management |
+| Git | Version control |
+| GitHub | Source code hosting |
+
+---
+
+# 🔐 Environment Variables
+
+Create a `.env` file in the project root.
+
+```env
+GROQ_API_KEY=your_groq_api_key
+TAVILY_API_KEY=your_tavily_api_key
+```
+
+Never hard-code API keys in the source code.
+
+Never commit `.env` to GitHub.
+
+The `.gitignore` file excludes:
+
+```text
+.env
+chatbot.db
+chatbot.db-shm
+chatbot.db-wal
+__pycache__/
+*.pyc
+venv/
+```
+
+---
+
+# 📦 Installation
+
+## 1. Clone the repository
+
+```bash
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+```
+
+## 2. Navigate into the project
 
-File Upload / RAG
+```bash
+cd Agentic_chatbot
+```
 
-Status: ⏸️ Not included in the current version
+## 3. Create a virtual environment
 
-File upload, document chunking, embeddings, vector databases, and document RAG are intentionally postponed while the core chatbot, tool system, reliability, and cost-control layers are being hardened.
+```bash
+python -m venv venv
+```
 
-Production Hardening
+## 4. Activate the virtual environment
 
-The chatbot has been incrementally improved with production-oriented reliability, safety, and cost-control mechanisms.
+### Windows PowerShell
 
-Input Protection
+```powershell
+.\venv\Scripts\Activate.ps1
+```
 
-Maximum user message length: 4,000 characters.
+## 5. Install dependencies
 
-Oversized messages are rejected before reaching the LLM.
+```bash
+pip install -r requirements.txt
+```
 
-Helps reduce accidental or abusive large requests.
+---
 
-Token Usage Tracking
+# ▶️ Run the Application
 
-The application captures LLM token usage for each model call:
+From the project root:
 
-Input tokens
+```bash
+streamlit run src/app.py
+```
 
-Output tokens
+The application will open in your browser.
 
-Total tokens
+---
 
-Number of LLM calls
+# 🧪 Tested Functionality
 
-Token usage is stored in SQLite using the token_usage table.
+The current implementation has been tested for:
 
-This is important for agentic workflows because one user request can result in multiple LLM calls, especially when tools are involved.
+### Conversation Management
 
-Token Budget
+- Create new conversation ✅
+- Switch conversations ✅
+- Multiple conversation isolation ✅
+- Rename conversation ✅
+- Archive conversation ✅
 
-The application checks conversation token usage against a configured maximum to help control excessive API consumption.
+### Persistence
 
-Rate Limiting
+- SQLite persistence ✅
+- Resume previous conversations ✅
+- Conversation survives application restart ✅
 
-Requests are rate-limited per conversation/thread.
+### Streaming
 
-When the request limit is exceeded, the application returns:
+- Real-time LLM streaming ✅
+- Progressive response rendering ✅
+- Tool activity indicators ✅
 
-Too many requests. Please wait a moment and try again.
+### Calculator
 
-Timeout Handling
+- Basic arithmetic ✅
+- Safe AST evaluation ✅
+- Division-by-zero handling ✅
+- Large-number protection ✅
+- Expression-length protection ✅
+- AST-complexity protection ✅
 
-LLM requests use timeout protection so slow provider responses do not leave the application waiting indefinitely.
+### Tavily
 
-Error Handling
+- Tavily API connection ✅
+- Web search execution ✅
+- LLM tool routing to Tavily ✅
+- Current-information questions ✅
+- Tavily activity indicator ✅
 
-The application catches processing failures and returns user-friendly error messages instead of exposing raw exceptions.
+### Token / Context Control
 
-Empty Response Handling
+- Conversation history limiting ✅
+- Tavily result limiting ✅
+- Reduced context usage for web searches ✅
+- Groq TPM protection through context control ✅
 
-If the LLM completes without producing usable final content, the application returns:
+---
 
-The AI could not generate a response.
-Please try a shorter or simpler request.
+# 🧪 Example Queries
 
-Calculator Safety
+### Normal question
 
-The calculator uses Python AST parsing rather than unrestricted eval().
+```text
+What is an AI agent?
+```
 
-Protection includes:
+### Calculator
 
-Expression length limit
+```text
+Calculate 125 * 48
+```
 
-Maximum number size
+Expected:
 
-AST node complexity limit
+```text
+125 × 48 = 6000
+```
 
-Restricted arithmetic operations
+### Web search
 
-Division-by-zero handling
+```text
+What are the latest developments in AI agents in 2026?
+```
 
-Invalid-expression handling
+### Current news
 
-Current Production Roadmap
+```text
+What are the latest developments in Andhra Pradesh?
+```
 
-Input Protection          ✅
-Token Tracking            ✅
-Usage Persistence          ✅
-Usage Aggregation          ✅
-Cost Estimation            ✅
-Token Budget               ✅
-Rate Limiting              ✅
-Timeout Handling           ✅
-Error Handling             ✅
-Tool Safety                ✅
-Empty Response Handling    ✅
-Logging & Monitoring       ⏳
-Authentication             ⏳
-User Isolation             ⏳
-Responsive UI Cleanup      ⏳
-Final Regression Testing   ⏳
+### Conversation memory
+
+```text
+My name is Sai.
+```
+
+Then:
+
+```text
+What is my name?
+```
+
+---
+
+# 🛡️ Reliability and Safety
+
+The project includes several production-oriented protections.
+
+### Calculator
+
+- Restricted arithmetic operations
+- AST-based evaluation
+- Maximum expression length
+- Maximum number size
+- Maximum AST complexity
+- Division-by-zero handling
+
+### Conversation
+
+- Limited conversation history
+- Token-budget control
+- Separate conversation threads
+- Persistent checkpoints
+
+### API usage
+
+- Controlled Tavily result count
+- Request timeout
+- Retry handling
+- User-friendly error messages
+- Context-size control
+
+---
+
+# ⚠️ Current Limitations
+
+This project is designed as a portfolio and learning project rather than a fully production-hosted enterprise system.
+
+Current limitations include:
+
+- Tavily search results consume additional context.
+- Groq API usage is subject to provider rate and token limits.
+- SQLite is suitable for local/small-scale usage but is not ideal for high-concurrency production deployments.
+- Web-search results depend on Tavily's search quality and availability.
+- API keys are required for LLM and web-search functionality.
+
+---
+
+# 🎯 Project Goal
+
+The goal of this project is to demonstrate the evolution of a traditional chatbot into an **Agentic AI application**.
+
+The final architecture combines:
+
+```text
+LLM
+ +
+Memory
+ +
+Tools
+ +
+Web Search
+ +
+Persistent State
+ +
+Streaming
+ +
+Tool Routing
+```
+
+The system demonstrates how an LLM can move beyond simply generating text and instead:
+
+```text
+Understand Request
+       ↓
+Decide Action
+       ↓
+Select Tool
+       ↓
+Execute Tool
+       ↓
+Observe Result
+       ↓
+Generate Final Response
+```
+
+---
+
+# 📌 Current Status
+
+| Component | Status |
+|---|---|
+| LangGraph chatbot | ✅ Complete |
+| Groq LLM integration | ✅ Complete |
+| SQLite persistence | ✅ Complete |
+| Conversation management | ✅ Complete |
+| Streaming responses | ✅ Complete |
+| Calculator tool | ✅ Complete |
+| Tool routing | ✅ Complete |
+| Tool activity UI | ✅ Complete |
+| Tavily web search | ✅ Complete |
+| Context/token control | ✅ Complete |
+| Git/GitHub preparation | 🔄 Finalizing |
+| Deployment | 🔄 Next |
+
+---
+
+# 👨‍💻 Development Philosophy
+
+The project was developed incrementally.
+
+Each major capability was:
+
+```text
+Learn
+ ↓
+Implement
+ ↓
+Test
+ ↓
+Debug
+ ↓
+Integrate
+ ↓
+Harden
+```
+
+This approach helped build the application while understanding the underlying Agentic AI concepts rather than simply assembling libraries.
+
+---
+
+# 📄 License
+
+This project is intended for educational, portfolio, and demonstration purposes.

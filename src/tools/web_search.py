@@ -8,7 +8,7 @@ load_dotenv()
 
 
 tavily_search = TavilySearch(
-    max_results=5,
+    max_results=3,
     topic="general",
     api_key=os.getenv("TAVILY_API_KEY"),
 )
@@ -40,4 +40,6 @@ def web_search(query: str) -> str:
         "query": query
     })
 
+
+    
     return str(result)

@@ -5,7 +5,7 @@ from tools.web_search import web_search
 from langchain_core.messages import SystemMessage
 
 MAX_HISTORY_MESSAGES = 10
-MAX_HISTORY_TOKENS = 2000
+MAX_HISTORY_TOKENS = 4000
 
 
 def estimate_message_tokens(message):

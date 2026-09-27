@@ -438,9 +438,22 @@ if user_input:
 
                 if event["type"] == "tool":
 
-                    thinking_placeholder.markdown(
-                        "🔧 Using calculator..."
-                    )
+                    tool_name = event.get("name", "")
+
+                    if tool_name == "calculator":
+                        thinking_placeholder.markdown(
+                            "🔧 Using calculator..."
+                        )
+
+                    elif tool_name == "web_search":
+                        thinking_placeholder.markdown(
+                            "🔎 Searching the web..."
+                        )
+
+                    else:
+                        thinking_placeholder.markdown(
+                            "🔧 Using tool..."
+                        )
 
                 elif event["type"] == "message":
 
